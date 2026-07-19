@@ -198,6 +198,74 @@ export async function listBooks(): Promise<LibraryBook[]> {
   ];
 }
 
+// ===== 絵本の細部調整（スタジオ機能。今はモック、WEEK5+でDifyに接続） =====
+
+const placeholderImageAlt = (n: number) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><rect width="600" height="400" fill="#A8D8EA"/><text x="300" y="215" font-family="sans-serif" font-size="42" fill="#333333" text-anchor="middle">Page ${n} ✳</text></svg>`,
+  )}`;
+
+const mockTextsAlt = (name: string) => [
+  `${name}が めを さますと、そこは ふしぎな もりの まえでした。`,
+  "こみちの さきで、ちいさな うさぎが てを ふっています。",
+  "「いっしょに たからものを さがそうよ！」と うさぎが いいました。",
+  "ふたりは わくわくしながら あるきだしました。",
+  "みたことのない おはなが いっぱいに さいています。",
+  "あまいにおいの かぜが ふわりと ふきました。",
+  "おおきな くまさんが にっこり わらって むかえてくれました。",
+  "いわを のぼって、ちょうじょうを めざします。",
+  "きらきら ひかる みずうみに くもが うつっています。",
+  "はなびらが ひらひらと まいおちてきました。",
+  "ほしたちが うたうように またたいています。",
+  `あしたは どんな ぼうけんが まっているかな、と ${name}は おもいました。`,
+];
+
+function saveBook(book: GenerateStoryResponse) {
+  try { sessionStorage.setItem(BOOK_KEY(book.book_id), JSON.stringify(book)); } catch { /* ignore */ }
+}
+
+/**
+ * ページの描き直し（WEEK5+: Dify側にページ単位の再生成APIを追加してもらい接続。
+ * 田中さんと要相談 — 現行のWeek 5計画には無い拡張機能）
+ */
+export async function regeneratePage(bookId: string, pageNumber: number): Promise<BookPage> {
+  // --- MOCK: 1.2秒待って、本文とイラストを別バージョンに切り替える ---
+  await new Promise((r) => setTimeout(r, 1200));
+  const book = await getBook(bookId);
+  const params = loadExtractedParams();
+  const name = params?.child_name ? `${params.child_name}くん` : "たろうくん";
+  const i = pageNumber - 1;
+  const prim = mockTexts(name)[i];
+  const isPrim = book.pages[i]?.text === prim;
+  const next: BookPage = {
+    page_number: pageNumber,
+    text: isPrim ? mockTextsAlt(name)[i] : prim,
+    image_url: isPrim ? placeholderImageAlt(pageNumber) : placeholderImage(pageNumber),
+  };
+  book.pages[i] = next;
+  saveBook(book);
+  return next;
+}
+
+/**
+ * チャットでの調整指示（WEEK5+: dify-chatの調整モードに接続予定）
+ */
+export async function requestAdjustment(bookId: string, message: string): Promise<{ answer: string }> {
+  // --- MOCK ---
+  void bookId;
+  await new Promise((r) => setTimeout(r, 900));
+  return {
+    answer: `わかりました！「${message}」ですね。そのイメージで調整していきます✨（いまはモックです。Week 5でAIにつながると、実際に絵本へ反映されます）`,
+  };
+}
+
+/** タイトル変更（ローカル反映。WEEK6: booksテーブルのUPDATEに差し替え） */
+export async function updateBookTitle(bookId: string, title: string): Promise<void> {
+  const book = await getBook(bookId);
+  book.title = title;
+  saveBook(book);
+}
+
 /**
  * Stripe決済セッション作成（Edge Function: create-checkout-session）
  * WEEK7: POST `${API_BASE}/create-checkout-session` { book_id } に差し替え。

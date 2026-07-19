@@ -1,12 +1,22 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { saveExtractedParams } from "@/lib/api";
+import { BookCover } from "@/components/BookCover";
+import {
+  saveExtractedParams,
+  generateStory,
+  regeneratePage,
+  requestAdjustment,
+  updateBookTitle,
+  type GenerateProgress,
+  type GenerateStoryResponse,
+} from "@/lib/api";
 
 export const Route = createFileRoute("/create")({
   component: CreatePage,
 });
 
 type Msg = { role: "ai" | "user"; text: string };
+type Phase = "chat" | "generating" | "ready";
 
 const THEMES = [
   { emoji: "🚀", label: "宇宙冒険" },
@@ -15,36 +25,58 @@ const THEMES = [
   { emoji: "🌲", label: "魔法の森" },
   { emoji: "🎋", label: "お祭り冒険" },
 ];
-
-// step: which answer we're waiting for. 0=name 1=age 2=interests 3=theme
 const TOTAL = 4;
 
+const STAGE_TEXT: Record<GenerateProgress["stage"], string> = {
+  imagining: "お子さまの世界を想像しています…",
+  story_generation: "物語を書いています…",
+  image_generation: "イラストを描いています…",
+  finalize: "絵本を仕上げています…",
+};
+
 function CreatePage() {
-  const navigate = useNavigate();
+  // ---- chat state ----
   const [messages, setMessages] = useState<Msg[]>([]);
   const [typing, setTyping] = useState(false);
   const [step, setStep] = useState(0);
-  const [mode, setMode] = useState<"text" | "theme" | "done">("text");
+  const [mode, setMode] = useState<"text" | "theme" | "locked" | "adjust">("text");
   const [input, setInput] = useState("");
-  const data = useRef({ name: "", age: "", interests: "" });
+  const data = useRef({ name: "", age: "", interests: "", themeEmoji: "" });
+
+  // ---- studio state ----
+  const [phase, setPhase] = useState<Phase>("chat");
+  const [tab, setTab] = useState<"chat" | "book">("chat"); // mobile tabs
+  const [progress, setProgress] = useState<GenerateProgress>({ percent: 0, stage: "imagining" });
+  const [book, setBook] = useState<GenerateStoryResponse | null>(null);
+  const [page, setPage] = useState(0);
+  const [regenBusy, setRegenBusy] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const t = timers.current;
-    return () => t.forEach(clearTimeout);
+    return () => {
+      t.forEach(clearTimeout);
+      abortRef.current?.abort();
+    };
   }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, typing]);
 
-  // AI "types" for a beat, then the message appears; optional callback after.
+  const pushAi = (text: string) => setMessages((m) => [...m, { role: "ai", text }]);
+  const pushUser = (text: string) => setMessages((m) => [...m, { role: "user", text }]);
+
   const aiSay = (text: string, after?: () => void) => {
     setTyping(true);
     const t = setTimeout(() => {
       setTyping(false);
-      setMessages((m) => [...m, { role: "ai", text }]);
+      pushAi(text);
       after?.();
     }, 900);
     timers.current.push(t);
@@ -52,17 +84,16 @@ function CreatePage() {
 
   // Kick off the conversation.
   useEffect(() => {
-    aiSay(
-      "DreamStoriesへようこそ！お子さまの絵本を作りましょう。まず、お子さまのお名前を教えてください。",
-    );
+    aiSay("DreamStoriesへようこそ！お子さまの絵本を作りましょう。まず、お子さまのお名前を教えてください。");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pushUser = (text: string) => setMessages((m) => [...m, { role: "user", text }]);
-
+  // ---- onboarding flow ----
   const sendText = () => {
     const v = input.trim();
-    if (!v || mode !== "text" || typing) return;
+    if (!v || typing) return;
+    if (mode === "adjust") { sendAdjust(v); return; }
+    if (mode !== "text") return;
     pushUser(v);
     setInput("");
     if (step === 0) {
@@ -83,11 +114,9 @@ function CreatePage() {
   const chooseTheme = (theme: { emoji: string; label: string }) => {
     if (mode !== "theme" || typing) return;
     pushUser(`${theme.emoji} ${theme.label}`);
-    setMode("done");
-    // 資料Week5の仕様どおり、収集した回答をSessionStorageへ保存。
-    // 生成中画面（/generating）がここから読み出して generate-story に渡す。
-    // WEEK5: この台本対話をapi.difyChat()に差し替えたら、レスポンスの
-    //        extracted_params をそのまま保存する形になる。
+    data.current.themeEmoji = theme.emoji;
+    setMode("locked");
+    // 資料Week5の仕様どおり、収集値をSessionStorageへ（generate-storyに渡す）
     saveExtractedParams({
       child_name: data.current.name,
       age: Number.parseInt(data.current.age, 10) || data.current.age,
@@ -96,125 +125,304 @@ function CreatePage() {
       language: "ja",
     });
     aiSay(
-      `ありがとうございます！${data.current.name}ちゃんの${theme.label}の絵本を作りますね。生成を開始します...`,
-      () => {
-        const t = setTimeout(() => navigate({ to: "/generating" }), 3000);
-        timers.current.push(t);
-      },
+      `ありがとうございます！${data.current.name}ちゃんの${theme.label}の絵本を作りますね。右の画面で様子が見られます📖`,
+      startGeneration,
     );
   };
 
-  const progress = Math.min(step + 1, TOTAL);
+  // ---- generation (right pane) ----
+  const startGeneration = () => {
+    setPhase("generating");
+    setTab("book");
+    const ac = new AbortController();
+    abortRef.current = ac;
+    // WEEK5: generateStoryの中身をEdge Function呼び出しに差し替えるだけ（api.ts参照）
+    generateStory(
+      {
+        child_name: data.current.name,
+        age: Number.parseInt(data.current.age, 10) || data.current.age,
+        interests: data.current.interests,
+        theme: THEMES.find((t) => t.emoji === data.current.themeEmoji)?.label ?? "",
+        language: "ja",
+      },
+      setProgress,
+      ac.signal,
+    )
+      .then((b) => {
+        setBook(b);
+        setTitleDraft(b.title);
+        setPage(0);
+        setPhase("ready");
+        setMode("adjust");
+        setTab("book");
+        aiSay(
+          "できあがりました！🎉 右のプレビューでページをめくってみてください。気になるページは「描き直す」ボタンで作り直せます。チャットで「もっと明るいお話にして」のような調整指示もできますよ。",
+        );
+      })
+      .catch((e: unknown) => {
+        if ((e as DOMException)?.name === "AbortError") return;
+        console.error(e);
+      });
+  };
+
+  // ---- adjustments (mock; api.ts経由でWeek 5にDify接続) ----
+  const sendAdjust = async (v: string) => {
+    pushUser(v);
+    setInput("");
+    setTyping(true);
+    const res = await requestAdjustment(book?.book_id ?? "demo", v);
+    setTyping(false);
+    pushAi(res.answer);
+  };
+
+  const regen = async () => {
+    if (!book || regenBusy) return;
+    const n = page + 1;
+    setRegenBusy(true);
+    const next = await regeneratePage(book.book_id, n);
+    setBook({ ...book, pages: book.pages.map((p, i) => (i === page ? next : p)) });
+    setRegenBusy(false);
+    pushAi(`${n}ページ目を描き直しました✨ ほかのページも気になったら教えてください。`);
+  };
+
+  const saveTitle = async () => {
+    if (!book) return;
+    const t = titleDraft.trim() || book.title;
+    await updateBookTitle(book.book_id, t);
+    setBook({ ...book, title: t });
+    setEditingTitle(false);
+  };
+
+  const progressCount = Math.min(step + 1, TOTAL);
   const placeholders = ["お名前を入力...", "年齢を入力...", "好きなものを入力..."];
+  const inputPlaceholder =
+    mode === "adjust" ? "調整したいことを入力（例：もっと明るいお話にして）" : (placeholders[step] ?? "メッセージを入力...");
+  const inputDisabled = typing || mode === "theme" || mode === "locked";
+
+  // ring geometry (generating pane)
+  const R = 70;
+  const C = 2 * Math.PI * R;
+
+  const current = book?.pages[page] ?? null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[color:var(--cream)]">
-      {/* Simple header: back + logo only */}
-      <header className="sticky top-0 z-40 backdrop-blur bg-[color:var(--cream)]/80 border-b border-[color:var(--border)]">
-        <div className="mx-auto max-w-2xl px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => navigate({ to: "/" })}
-            className="h-9 w-9 shrink-0 rounded-full border border-[color:var(--border)] bg-white flex items-center justify-center text-[color:var(--muted-foreground)]"
-            aria-label="戻る"
-          >
-            ←
-          </button>
+    <div className="h-dvh flex flex-col bg-[color:var(--cream)]">
+      {/* Simple header: back + logo */}
+      <header className="shrink-0 z-40 backdrop-blur bg-[color:var(--cream)]/80 border-b border-[color:var(--border)]">
+        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
+          <Link to="/" className="h-9 w-9 shrink-0 rounded-full border border-[color:var(--border)] bg-white flex items-center justify-center text-[color:var(--muted-foreground)]" aria-label="戻る">←</Link>
           <Link to="/" className="flex items-center gap-2">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[color:var(--coral)] text-white text-base">✦</span>
-            <span className="text-base font-bold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-              DreamStories
-            </span>
+            <span className="text-base font-bold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>DreamStories</span>
           </Link>
+          {/* mobile tabs */}
+          <div className="ml-auto flex md:hidden rounded-full border border-[color:var(--border)] bg-white p-0.5 text-sm">
+            <button
+              onClick={() => setTab("chat")}
+              className={`px-3 py-1.5 rounded-full whitespace-nowrap ${tab === "chat" ? "bg-[color:var(--coral)] text-white font-bold" : "text-[color:var(--muted-foreground)]"}`}
+            >
+              💬 チャット
+            </button>
+            <button
+              onClick={() => setTab("book")}
+              className={`relative px-3 py-1.5 rounded-full whitespace-nowrap ${tab === "book" ? "bg-[color:var(--coral)] text-white font-bold" : "text-[color:var(--muted-foreground)]"}`}
+            >
+              📖 えほん
+              {phase !== "chat" && tab === "chat" && (
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[color:var(--coral)] ring-2 ring-white" />
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Progress indicator */}
-      <div className="mx-auto w-full max-w-2xl px-4 pt-3">
-        <div className="flex items-center justify-between text-xs text-[color:var(--muted-foreground)] mb-1.5">
-          <span>お子さまについて教えてください</span>
-          <span className="font-semibold text-[color:var(--coral)] tabular-nums">{progress} / {TOTAL}</span>
-        </div>
-        <div className="h-1.5 w-full rounded-full bg-[color:var(--muted)] overflow-hidden">
-          <div
-            className="h-full rounded-full bg-[color:var(--coral)] transition-all duration-500"
-            style={{ width: `${(progress / TOTAL) * 100}%` }}
-          />
-        </div>
-      </div>
+      {/* Studio: left chat / right live preview */}
+      <main className="flex-1 min-h-0 mx-auto w-full max-w-6xl px-4 py-4 md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-5">
+        {/* ==== Left: chat ==== */}
+        <section className={`${tab === "book" ? "hidden md:flex" : "flex"} h-full min-h-0 flex-col`}>
+          {/* progress indicator (onboarding only) */}
+          {phase === "chat" && (
+            <div className="shrink-0 pb-3">
+              <div className="flex items-center justify-between text-xs text-[color:var(--muted-foreground)] mb-1.5">
+                <span>お子さまについて教えてください</span>
+                <span className="font-semibold text-[color:var(--coral)] tabular-nums">{progressCount} / {TOTAL}</span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-[color:var(--muted)] overflow-hidden">
+                <div className="h-full rounded-full bg-[color:var(--coral)] transition-all duration-500" style={{ width: `${(progressCount / TOTAL) * 100}%` }} />
+              </div>
+            </div>
+          )}
 
-      {/* Chat */}
-      <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-4 flex flex-col min-h-0">
-        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 pb-4">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
-            >
-              {m.role === "ai" && (
+          <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto space-y-3 pb-3 pr-1">
+            {messages.map((m, i) => (
+              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                {m.role === "ai" && (
+                  <div className="mr-2 h-9 w-9 shrink-0 rounded-full bg-[color:var(--butter)] flex items-center justify-center">🧚</div>
+                )}
+                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${m.role === "user" ? "bg-[color:var(--sky)] text-[#1F3A47] rounded-br-md" : "bg-[#FFE9EA] text-[#5B4145] rounded-bl-md"}`}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {typing && (
+              <div className="flex justify-start animate-in fade-in duration-200">
                 <div className="mr-2 h-9 w-9 shrink-0 rounded-full bg-[color:var(--butter)] flex items-center justify-center">🧚</div>
-              )}
-              <div
-                className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
-                  m.role === "user"
-                    ? "bg-[color:var(--sky)] text-[#1F3A47] rounded-br-md"
-                    : "bg-[#FFE9EA] text-[#5B4145] rounded-bl-md"
-                }`}
-              >
-                {m.text}
+                <div className="rounded-2xl rounded-bl-md bg-[#FFE9EA] text-[color:var(--coral)] px-4 py-4 shadow-sm flex items-center gap-1.5">
+                  <span className="ds-dot" />
+                  <span className="ds-dot" style={{ animationDelay: "0.2s" }} />
+                  <span className="ds-dot" style={{ animationDelay: "0.4s" }} />
+                </div>
               </div>
-            </div>
-          ))}
+            )}
+          </div>
 
-          {/* Typing indicator */}
-          {typing && (
-            <div className="flex justify-start animate-in fade-in duration-200">
-              <div className="mr-2 h-9 w-9 shrink-0 rounded-full bg-[color:var(--butter)] flex items-center justify-center">🧚</div>
-              <div className="rounded-2xl rounded-bl-md bg-[#FFE9EA] text-[color:var(--coral)] px-4 py-4 shadow-sm flex items-center gap-1.5">
-                <span className="ds-dot" />
-                <span className="ds-dot" style={{ animationDelay: "0.2s" }} />
-                <span className="ds-dot" style={{ animationDelay: "0.4s" }} />
+          {/* input / theme buttons */}
+          <div className="shrink-0 pt-2 bg-[color:var(--cream)]">
+            {mode === "theme" ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {THEMES.map((t) => (
+                  <button
+                    key={t.label}
+                    onClick={() => chooseTheme(t)}
+                    disabled={typing}
+                    className="rounded-2xl border-2 border-[color:var(--coral)] bg-white px-3 py-3 text-sm font-semibold text-[color:var(--coral)] hover:bg-[color:var(--coral)] hover:text-white transition-colors disabled:opacity-50"
+                  >
+                    <span className="text-lg mr-1">{t.emoji}</span>
+                    {t.label}
+                  </button>
+                ))}
               </div>
-            </div>
-          )}
-        </div>
+            ) : mode === "locked" ? (
+              <div className="text-center text-sm text-[color:var(--muted-foreground)] py-3">絵本を生成しています…</div>
+            ) : (
+              <form onSubmit={(e) => { e.preventDefault(); sendText(); }} className="flex gap-2">
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={inputPlaceholder}
+                  inputMode={step === 1 && mode === "text" ? "numeric" : "text"}
+                  disabled={inputDisabled}
+                  className="flex-1 min-w-0 rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[color:var(--coral)]/40 disabled:opacity-60"
+                />
+                <button type="submit" disabled={inputDisabled || !input.trim()} className="btn-primary !py-3 !px-5 disabled:opacity-50">送信</button>
+              </form>
+            )}
+          </div>
+        </section>
 
-        {/* Bottom fixed: theme buttons OR text input */}
-        <div className="sticky bottom-2 bg-[color:var(--cream)]/90 backdrop-blur pt-2">
-          {mode === "theme" ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {THEMES.map((t) => (
-                <button
-                  key={t.label}
-                  onClick={() => chooseTheme(t)}
-                  disabled={typing}
-                  className="rounded-2xl border-2 border-[color:var(--coral)] bg-white px-3 py-3 text-sm font-semibold text-[color:var(--coral)] hover:bg-[color:var(--coral)] hover:text-white transition-colors disabled:opacity-50"
-                >
-                  <span className="text-lg mr-1">{t.emoji}</span>
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          ) : mode === "text" ? (
-            <form onSubmit={(e) => { e.preventDefault(); sendText(); }} className="flex gap-2">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={placeholders[step] ?? "メッセージを入力..."}
-                inputMode={step === 1 ? "numeric" : "text"}
-                disabled={typing}
-                autoFocus
-                className="flex-1 rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[color:var(--coral)]/40 disabled:opacity-60"
-              />
-              <button type="submit" disabled={typing || !input.trim()} className="btn-primary !py-3 !px-5 disabled:opacity-50">
-                送信
-              </button>
-            </form>
-          ) : (
-            <div className="text-center text-sm text-[color:var(--muted-foreground)] py-3">
-              絵本の生成を開始しています...
-            </div>
-          )}
-        </div>
+        {/* ==== Right: live book pane ==== */}
+        <section className={`${tab === "chat" ? "hidden md:flex" : "flex"} h-full min-h-0 flex-col mt-4 md:mt-0`}>
+          <div className="flex-1 min-h-0 overflow-y-auto rounded-3xl border border-[color:var(--border)] bg-white/60 p-4 md:p-6">
+            {phase === "chat" && (
+              // ① 回答中：下書きカードが埋まっていく
+              <div className="h-full flex flex-col items-center justify-center text-center gap-5">
+                <div className="w-40 md:w-48">
+                  <BookCover
+                    emoji={data.current.themeEmoji || "📖"}
+                    tone="from-[color:var(--sky)] to-[color:var(--butter)]"
+                    size="text-5xl"
+                    className={data.current.themeEmoji ? "" : "opacity-70 grayscale-[30%]"}
+                  />
+                </div>
+                <div className="w-full max-w-xs text-left text-sm space-y-2">
+                  {[
+                    { label: "おなまえ", value: data.current.name },
+                    { label: "ねんれい", value: data.current.age && `${data.current.age}歳` },
+                    { label: "すきなもの", value: data.current.interests },
+                    { label: "テーマ", value: data.current.themeEmoji && `${data.current.themeEmoji} ${THEMES.find((t) => t.emoji === data.current.themeEmoji)?.label ?? ""}` },
+                  ].map((row) => (
+                    <div key={row.label} className="flex items-center justify-between rounded-xl bg-white border border-[color:var(--border)] px-4 py-2.5">
+                      <span className="text-xs text-[color:var(--muted-foreground)]">{row.label}</span>
+                      {row.value ? (
+                        <span className="font-semibold animate-in fade-in duration-500">{row.value}</span>
+                      ) : (
+                        <span className="text-[color:var(--border)]">…</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-[color:var(--muted-foreground)]">
+                  {step < 3 ? `あと${4 - step}つ答えると、絵本づくりが始まります` : "テーマを選ぶと、絵本づくりが始まります"}
+                </p>
+              </div>
+            )}
+
+            {phase === "generating" && (
+              // ② 生成中：進捗リング
+              <div className="h-full flex flex-col items-center justify-center text-center gap-4">
+                <div className="relative h-40 w-40">
+                  <svg viewBox="0 0 160 160" className="h-40 w-40 -rotate-90">
+                    <defs>
+                      <linearGradient id="studioRing" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stopColor="#FF9AA2" />
+                        <stop offset="0.6" stopColor="#FFB3A7" />
+                        <stop offset="1" stopColor="#FFE5A0" />
+                      </linearGradient>
+                    </defs>
+                    <circle cx="80" cy="80" r={R} fill="none" stroke="var(--muted)" strokeWidth="12" />
+                    <circle cx="80" cy="80" r={R} fill="none" stroke="url(#studioRing)" strokeWidth="12" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - progress.percent / 100)} style={{ transition: "stroke-dashoffset 0.25s ease" }} />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-3xl font-bold text-[color:var(--coral)] tabular-nums" style={{ fontFamily: "var(--font-display)" }}>{progress.percent}%</span>
+                  </div>
+                </div>
+                <p key={progress.stage} className="animate-in fade-in duration-500 font-semibold">{STAGE_TEXT[progress.stage]}</p>
+                <p className="text-xs text-[color:var(--muted-foreground)]">できあがると、ここに絵本があらわれます</p>
+              </div>
+            )}
+
+            {phase === "ready" && book && current && (
+              // ③ 完成：プレビュー＋調整
+              <div className="flex flex-col gap-3">
+                {/* title row (editable) */}
+                <div className="flex items-center justify-center gap-2">
+                  {editingTitle ? (
+                    <form onSubmit={(e) => { e.preventDefault(); saveTitle(); }} className="flex gap-2 w-full max-w-sm">
+                      <input value={titleDraft} onChange={(e) => setTitleDraft(e.target.value)} autoFocus className="flex-1 min-w-0 rounded-xl border border-[color:var(--coral)] bg-white px-3 py-2 text-sm outline-none" />
+                      <button type="submit" className="btn-primary !py-2 !px-4 text-sm">保存</button>
+                    </form>
+                  ) : (
+                    <>
+                      <h2 className="text-lg truncate" style={{ fontFamily: "var(--font-display)" }}>{book.title}</h2>
+                      <button onClick={() => { setTitleDraft(book.title); setEditingTitle(true); }} aria-label="タイトルを編集" className="h-8 w-8 shrink-0 rounded-full border border-[color:var(--border)] bg-white text-sm">✏️</button>
+                    </>
+                  )}
+                </div>
+
+                {/* page viewer */}
+                <div key={`${page}-${current.text}`} className="animate-in fade-in duration-300 rounded-2xl overflow-hidden bg-white border border-[color:var(--border)] shadow-[0_10px_30px_-14px_rgba(120,90,70,0.4)]">
+                  <img src={current.image_url} alt={`ページ${current.page_number}のイラスト`} className="w-full aspect-[3/2] object-cover" draggable={false} />
+                  <div className="p-4 md:p-5 h-32 flex flex-col">
+                    <p className="text-sm md:text-base leading-loose flex-1 overflow-hidden" style={{ fontFamily: "var(--font-display)" }}>{current.text}</p>
+                    <div className="text-xs text-[color:var(--muted-foreground)] text-right">— {current.page_number} —</div>
+                  </div>
+                </div>
+
+                {/* pager + regen */}
+                <div className="flex items-center justify-between gap-2">
+                  <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="h-10 w-10 shrink-0 rounded-full bg-white shadow border border-[color:var(--border)] text-[color:var(--coral)] disabled:opacity-30" aria-label="前へ">←</button>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xs text-[color:var(--muted-foreground)] tabular-nums">{page + 1} / {book.pages.length}</span>
+                    <button onClick={regen} disabled={regenBusy} className="rounded-full border-2 border-[color:var(--coral)] bg-white px-4 py-1.5 text-xs font-bold text-[color:var(--coral)] hover:bg-[color:var(--coral)] hover:text-white transition-colors disabled:opacity-50">
+                      {regenBusy ? "描き直しています…" : "🔄 このページを描き直す"}
+                    </button>
+                  </div>
+                  <button onClick={() => setPage((p) => Math.min(book.pages.length - 1, p + 1))} disabled={page === book.pages.length - 1} className="h-10 w-10 shrink-0 rounded-full bg-white shadow border border-[color:var(--border)] text-[color:var(--coral)] disabled:opacity-30" aria-label="次へ">→</button>
+                </div>
+
+                {/* actions */}
+                <div className="mt-1 space-y-2">
+                  <Link to="/checkout/$id" params={{ id: book.book_id }} className="btn-primary w-full text-base !py-3.5">
+                    この絵本を購入する（5,000円）
+                  </Link>
+                  <Link to="/preview/$id" params={{ id: book.book_id }} className="block text-center text-xs text-[color:var(--muted-foreground)] underline underline-offset-2">
+                    ⛶ 大きなプレビューでめくって見る
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );

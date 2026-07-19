@@ -79,6 +79,7 @@
   .inset-x-0 { inset-inline: calc(var(--spacing) * 0); }
   .inset-y-0 { inset-block: calc(var(--spacing) * 0); }
   .start { inset-inline-start: var(--spacing); }
+  .end { inset-inline-end: var(--spacing); }
   .-top-4 { top: calc(var(--spacing) * -4); }
   .-top-12 { top: calc(var(--spacing) * -12); }
   .-top-20 { top: calc(var(--spacing) * -20); }
@@ -214,6 +215,7 @@
   .w-\(--sidebar-width\) { width: var(--sidebar-width); }
   .w-0 { width: calc(var(--spacing) * 0); }
   .w-1 { width: calc(var(--spacing) * 1); }
+  .w-1\/2 { width: 50%; }
   .w-2 { width: calc(var(--spacing) * 2); }
   .w-2\.5 { width: calc(var(--spacing) * 2.5); }
   .w-3 { width: calc(var(--spacing) * 3); }
@@ -342,8 +344,10 @@
   .rounded-sm { border-radius: calc(var(--radius) - 4px); }
   .rounded-xl { border-radius: calc(var(--radius) + 4px); }
   .rounded-t-\[10px\] { border-top-left-radius: 10px; border-top-right-radius: 10px; }
+  .rounded-l-2xl { border-top-left-radius: calc(var(--radius) + 8px); border-bottom-left-radius: calc(var(--radius) + 8px); }
   .rounded-l-md { border-top-left-radius: calc(var(--radius) - 2px); border-bottom-left-radius: calc(var(--radius) - 2px); }
   .rounded-tl-sm { border-top-left-radius: calc(var(--radius) - 4px); }
+  .rounded-r-2xl { border-top-right-radius: calc(var(--radius) + 8px); border-bottom-right-radius: calc(var(--radius) + 8px); }
   .rounded-r-md { border-top-right-radius: calc(var(--radius) - 2px); border-bottom-right-radius: calc(var(--radius) - 2px); }
   .rounded-br-md { border-bottom-right-radius: calc(var(--radius) - 2px); }
   .rounded-bl-md { border-bottom-left-radius: calc(var(--radius) - 2px); }
@@ -398,6 +402,7 @@
   .bg-\[color\:var\(--sky\)\] { background-color: var(--sky); }
   .bg-accent { background-color: var(--accent); }
   .bg-background { background-color: var(--background); }
+  .bg-black { background-color: var(--color-black); }
   .bg-black\/80 { background-color: rgba(0, 0, 0, 0.8); }
   @supports (color: color-mix(in lab, red, red)) {
   .bg-black\/80 { background-color: color-mix(in oklab, var(--color-black) 80%, transparent); }
@@ -472,6 +477,11 @@
   .from-black\/10 { --tw-gradient-from: color-mix(in oklab, var(--color-black) 10%, transparent); }
 }
   .from-black\/10 { --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position)); }
+  .from-black\/12 { --tw-gradient-from: #0000001f; }
+  @supports (color: color-mix(in lab, red, red)) {
+  .from-black\/12 { --tw-gradient-from: color-mix(in oklab, var(--color-black) 12%, transparent); }
+}
+  .from-black\/12 { --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position)); }
   .via-\[color\:var\(--butter\)\]\/40 { --tw-gradient-via: var(--butter); }
   @supports (color: color-mix(in lab, red, red)) {
   .via-\[color\:var\(--butter\)\]\/40 { --tw-gradient-via: color-mix(in oklab, var(--butter) 40%, transparent); }
@@ -641,6 +651,7 @@
   .shadow-\[0_0_0_1px_var\(--sidebar-border\)\] { --tw-shadow: 0 0 0 1px var(--tw-shadow-color, var(--sidebar-border)); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
   .shadow-\[0_10px_30px_-14px_rgba\(120\,90\,70\,0\.4\)\] { --tw-shadow: 0 10px 30px -14px var(--tw-shadow-color, #785a4666); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
   .shadow-\[0_10px_30px_-14px_rgba\(120\,90\,70\,0\.35\)\] { --tw-shadow: 0 10px 30px -14px var(--tw-shadow-color, #785a4659); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
+  .shadow-\[0_18px_45px_-18px_rgba\(120\,90\,70\,0\.5\)\] { --tw-shadow: 0 18px 45px -18px var(--tw-shadow-color, #785a4680); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
   .shadow-\[var\(--shadow-soft\)\] { --tw-shadow: var(--shadow-soft); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
   .shadow-lg { --tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, #0000001a), 0 4px 6px -4px var(--tw-shadow-color, #0000001a); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
   .shadow-md { --tw-shadow: 0 4px 6px -1px var(--tw-shadow-color, #0000001a), 0 2px 4px -2px var(--tw-shadow-color, #0000001a); box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow); }
@@ -680,7 +691,10 @@
   .select-none { user-select: none; }
   .zoom-in-95 { --tw-enter-scale: .95; }
   .\[--cell-size\:2rem\] { --cell-size: 2rem; }
+  .\[backface-visibility\:hidden\] { backface-visibility: hidden; }
+  .\[transform-style\:preserve-3d\] { transform-style: preserve-3d; }
   .fade-in { --tw-enter-opacity: 0; }
+  .running { animation-play-state: running; }
   .slide-in-from-bottom-2 { --tw-enter-translate-y: calc(2*var(--spacing)); }
   .group-focus-within\/menu-item\:opacity-100:is(:where(.group\/menu-item):focus-within *) { opacity: 1; }
   @media (hover: hover) {
@@ -1550,24 +1564,11 @@
   ];
   function pvPlaceholder(n){ return "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><rect width="600" height="400" fill="#FFE5A0"/><text x="300" y="215" font-family="sans-serif" font-size="42" fill="#333333" text-anchor="middle">Page ' + n + '</text></svg>'); }
 
-  var pvAudio = null;
-  function pvSwish(){
-    try {
-      var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
-      pvAudio = pvAudio || new AC(); var ctx = pvAudio, dur = 0.18;
-      var buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate*dur), ctx.sampleRate), d = buf.getChannelData(0);
-      for(var i=0;i<d.length;i++){ var t=i/d.length; d[i]=(Math.random()*2-1)*Math.pow(1-t,2); }
-      var src = ctx.createBufferSource(); src.buffer = buf;
-      var bp = ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1800; bp.Q.value=0.7;
-      var g = ctx.createGain(); g.gain.value=0.05;
-      src.connect(bp).connect(g).connect(ctx.destination); src.start();
-    } catch(e){}
-  }
-
   function renderPreview(){
     var total = PV_TEXTS.length;
-    var index = 0, sliding = false, DUR = 400;
+    var index = 0, flipping = false, DUR = 700, EASE = "cubic-bezier(0.42, 0, 0.2, 1)";
     function per(){ return window.innerWidth < 768 ? 1 : 2; }
+    function stageMax(){ return per() === 1 ? 460 : 880; }
 
     root.innerHTML =
       '<header class="sticky top-0 z-40 backdrop-blur bg-[color:var(--cream)]/80 border-b border-[color:var(--border)]">'
@@ -1580,7 +1581,7 @@
       + '<main class="flex-1 mx-auto w-full max-w-5xl px-4 py-6">'
       + '<div class="text-center text-xs text-[color:var(--muted-foreground)] mb-3">プレビュー #demo</div>'
       + '<div class="relative">'
-      + '<div id="pvViewport" class="overflow-hidden select-none" style="touch-action:pan-y"><div id="pvTrack" class="relative will-change-transform" style="transform:translateX(0)"></div></div>'
+      + '<div id="pvPersp" class="mx-auto w-full select-none" style="perspective:1800px;touch-action:pan-y"><div id="pvStage" class="relative rounded-2xl shadow-[0_18px_45px_-18px_rgba(120,90,70,0.5)]"></div></div>'
       + '<button id="pvPrev" class="absolute -left-2 md:-left-5 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-white shadow-md border border-[color:var(--border)] text-xl text-[color:var(--coral)] disabled:opacity-30 transition z-20" aria-label="前へ">←</button>'
       + '<button id="pvNext" class="absolute -right-2 md:-right-5 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-white shadow-md border border-[color:var(--border)] text-xl text-[color:var(--coral)] disabled:opacity-30 transition z-20" aria-label="次へ">→</button>'
       + '</div>'
@@ -1589,30 +1590,25 @@
       + '<div class="sticky bottom-0 border-t border-[color:var(--border)] bg-[color:var(--cream)]/90 backdrop-blur"><div class="mx-auto max-w-5xl px-4 py-3"><a id="pvBuy" data-href="/checkout/demo" class="btn-primary w-full text-base !py-4 transition" style="cursor:pointer">この絵本を購入する（5,000円）</a></div></div>'
       + '</div>';
 
-    var viewport = document.getElementById("pvViewport"), track = document.getElementById("pvTrack");
+    var persp = document.getElementById("pvPersp"), stage = document.getElementById("pvStage");
     var prevBtn = document.getElementById("pvPrev"), nextBtn = document.getElementById("pvNext");
 
-    function cardHTML(n, text){
-      return '<div class="relative rounded-2xl overflow-hidden bg-white border border-[color:var(--border)] shadow-[0_10px_30px_-14px_rgba(120,90,70,0.4)]">'
-        + '<div class="pointer-events-none absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-black/10 to-transparent z-10"></div>'
-        + '<div class="pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-black/10 to-transparent z-10"></div>'
-        + '<img src="' + pvPlaceholder(n) + '" alt="ページ' + n + 'のイラスト" class="w-full aspect-[3/2] object-cover" draggable="false" />'
-        + '<div class="p-5 md:p-7 min-h-[7rem]"><p class="text-base md:text-lg leading-loose" style="font-family:var(--font-display)">' + esc(text) + '</p><div class="mt-4 text-xs text-[color:var(--muted-foreground)] text-right">— ' + n + ' —</div></div></div>';
+    function pageHTML(i, side){
+      var round = side==="left" ? "rounded-l-2xl" : side==="right" ? "rounded-r-2xl" : "rounded-2xl";
+      var spine = side==="left" ? "bg-gradient-to-l from-black/12 to-transparent right-0" : side==="right" ? "bg-gradient-to-r from-black/12 to-transparent left-0" : "hidden";
+      if(i<0 || i>=total) return '<div class="h-full bg-[color:var(--cream)] '+round+'"></div>';
+      var n = i+1;
+      return '<div class="relative h-full flex flex-col bg-white overflow-hidden '+round+'">'
+        + '<div class="pointer-events-none absolute inset-y-0 w-6 z-10 '+spine+'"></div>'
+        + '<img src="'+pvPlaceholder(n)+'" alt="ページ'+n+'のイラスト" class="w-full aspect-[3/2] object-cover" draggable="false" />'
+        + '<div class="p-5 md:p-7 flex-1"><p class="text-base md:text-lg leading-loose" style="font-family:var(--font-display)">'+esc(PV_TEXTS[i])+'</p><div class="mt-4 text-xs text-[color:var(--muted-foreground)] text-right">— '+n+' —</div></div></div>';
     }
-    function viewHTML(start){
-      var p = per(); if(start < 0 || start >= total) return "";
-      var h = '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">';
-      for(var k=start; k<start+p && k<total; k++) h += cardHTML(k+1, PV_TEXTS[k]);
-      return h + '</div>';
+    function spreadHTML(l, r){
+      if(per()===1) return '<div class="h-full">'+pageHTML(l,"single")+'</div>';
+      return '<div class="flex items-stretch h-full"><div class="w-1/2">'+pageHTML(l,"left")+'</div><div class="w-1/2">'+pageHTML(r,"right")+'</div></div>';
     }
-    function buildLayers(){
-      var p = per(), lastIndex = (Math.ceil(total/p)-1)*p;
-      index = Math.min(Math.floor(index/p)*p, lastIndex);
-      track.innerHTML = viewHTML(index)
-        + '<div class="absolute inset-0" style="transform:translateX(-100%)">' + viewHTML(index+p) + '</div>'
-        + '<div class="absolute inset-0" style="transform:translateX(100%)">' + viewHTML(index-p) + '</div>';
-    }
-    function setTrack(px, animate){ track.style.transition = animate ? ("transform " + DUR + "ms ease-out") : "none"; track.style.transform = "translateX(" + px + "px)"; }
+    function showStatic(){ persp.style.maxWidth = stageMax()+"px"; stage.innerHTML = spreadHTML(index, index+1); }
+
     function updateChrome(){
       var p = per(), lastIndex = (Math.ceil(total/p)-1)*p, atStart = index===0, atEnd = index>=lastIndex;
       var views = Math.ceil(total/p), cur = Math.floor(index/p);
@@ -1621,62 +1617,60 @@
       var lbl = document.getElementById("pvLabel");
       lbl.textContent = p>1 ? (index+1)+"–"+Math.min(index+p,total)+" / "+total : (index+1)+" / "+total;
       lbl.classList.remove("animate-in","fade-in","zoom-in-95"); void lbl.offsetWidth; lbl.classList.add("animate-in","fade-in","zoom-in-95");
-      prevBtn.disabled = atStart || sliding; nextBtn.disabled = atEnd || sliding;
+      prevBtn.disabled = atStart || flipping; nextBtn.disabled = atEnd || flipping;
       var buy = document.getElementById("pvBuy");
       if(atEnd){ buy.classList.add("ring-4","ring-[color:var(--butter)]","scale-[1.01]"); } else { buy.classList.remove("ring-4","ring-[color:var(--butter)]","scale-[1.01]"); }
     }
-    function commit(dir){
+
+    function doFlip(dir){
       var p = per(), lastIndex = (Math.ceil(total/p)-1)*p;
-      index = Math.max(0, Math.min(index + dir*p, lastIndex));
-      buildLayers(); setTrack(0, false); sliding = false; pvSwish(); updateChrome();
-    }
-    function slide(dir){
-      var p = per(), lastIndex = (Math.ceil(total/p)-1)*p;
-      if(sliding) return;
+      if(flipping) return;
       if(dir>0 && index>=lastIndex) return;
       if(dir<0 && index===0) return;
-      var W = viewport.clientWidth;
-      sliding = true; updateChrome(); setTrack(0, false);
-      requestAnimationFrame(function(){ requestAnimationFrame(function(){ setTrack(dir*W, true); }); });
-      setTimeout(function(){ commit(dir); }, DUR);
+      flipping = true; updateChrome();
+      var end = dir>0 ? -180 : 180;
+      var baseL, baseR, frontIdx, backIdx, frontSide, backSide, leafCss;
+      if(p===2){
+        if(dir>0){ baseL=index; baseR=index+3; frontIdx=index+1; backIdx=index+2; leafCss="left:50%;width:50%;top:0;bottom:0;transform-origin:left center;"; frontSide="right"; backSide="left"; }
+        else { baseL=index-2; baseR=index+1; frontIdx=index; backIdx=index-1; leafCss="left:0;width:50%;top:0;bottom:0;transform-origin:right center;"; frontSide="left"; backSide="right"; }
+      } else {
+        if(dir>0){ baseL=index+1; baseR=index+1; frontIdx=index; backIdx=index+1; }
+        else { baseL=index-1; baseR=index-1; frontIdx=index; backIdx=index-1; }
+        leafCss = "inset:0;transform-origin:"+(dir>0?"left":"right")+" center;"; frontSide="single"; backSide="single";
+      }
+      stage.innerHTML = spreadHTML(baseL, baseR)
+        + '<div id="pvLeaf" class="absolute" style="transform-style:preserve-3d;'+leafCss+'transform:rotateY(0deg);will-change:transform;">'
+        + '<div class="absolute inset-0" style="backface-visibility:hidden">'+pageHTML(frontIdx,frontSide)+'<div id="pvShF" class="pointer-events-none absolute inset-0 bg-black" style="opacity:0"></div></div>'
+        + '<div class="absolute inset-0" style="backface-visibility:hidden;transform:rotateY(180deg)">'+pageHTML(backIdx,backSide)+'<div id="pvShB" class="pointer-events-none absolute inset-0 bg-black" style="opacity:0.28"></div></div>'
+        + '</div>';
+      var leaf = document.getElementById("pvLeaf"), shF = document.getElementById("pvShF"), shB = document.getElementById("pvShB");
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        leaf.style.transition = "transform "+DUR+"ms "+EASE; leaf.style.transform = "rotateY("+end+"deg)";
+        shF.style.transition = "opacity "+DUR+"ms "+EASE; shF.style.opacity = "0.28";
+        shB.style.transition = "opacity "+DUR+"ms "+EASE; shB.style.opacity = "0";
+      }); });
+      setTimeout(function(){
+        index = dir>0 ? Math.min(index+p, lastIndex) : Math.max(index-p, 0);
+        showStatic(); flipping = false; updateChrome();
+      }, DUR);
     }
 
-    prevBtn.addEventListener("click", function(){ slide(-1); });
-    nextBtn.addEventListener("click", function(){ slide(1); });
+    prevBtn.addEventListener("click", function(){ doFlip(-1); });
+    nextBtn.addEventListener("click", function(){ doFlip(1); });
 
-    // pointer drag (finger-follow)
-    var drag = { active:false, startX:0, w:0, dx:0 };
-    viewport.addEventListener("pointerdown", function(e){
-      if(sliding) return;
-      drag = { active:true, startX:e.clientX, w:viewport.clientWidth, dx:0 };
-      setTrack(0, false); try{ viewport.setPointerCapture(e.pointerId); }catch(_){}
-    });
-    viewport.addEventListener("pointermove", function(e){
-      if(!drag.active) return;
-      var p = per(), lastIndex = (Math.ceil(total/p)-1)*p, atStart = index===0, atEnd = index>=lastIndex;
-      var dx = e.clientX - drag.startX;
-      if((dx>0 && atEnd) || (dx<0 && atStart)) dx *= 0.25;
-      drag.dx = dx; setTrack(dx, false);
-    });
-    function endDrag(){
-      if(!drag.active) return; drag.active = false;
-      var p = per(), lastIndex = (Math.ceil(total/p)-1)*p, atStart = index===0, atEnd = index>=lastIndex;
-      var W = drag.w, dx = drag.dx, th = W*0.22;
-      if(dx>th && !atEnd){ sliding=true; updateChrome(); setTrack(W, true); setTimeout(function(){ commit(1); }, DUR); }
-      else if(dx<-th && !atStart){ sliding=true; updateChrome(); setTrack(-W, true); setTimeout(function(){ commit(-1); }, DUR); }
-      else { setTrack(0, true); }
-    }
-    viewport.addEventListener("pointerup", endDrag);
-    viewport.addEventListener("pointercancel", endDrag);
+    // swipe (trigger a flip)
+    var down = null;
+    persp.addEventListener("pointerdown", function(e){ if(!flipping) down = e.clientX; });
+    persp.addEventListener("pointerup", function(e){ if(down==null) return; var dx = e.clientX - down; down = null; if(dx>45) doFlip(1); else if(dx<-45) doFlip(-1); });
 
     // keyboard + resize (cleaned up on screen change)
-    var onKey = function(e){ if(e.key==="ArrowRight") slide(1); if(e.key==="ArrowLeft") slide(-1); };
-    var onResize = function(){ buildLayers(); setTrack(0, false); updateChrome(); };
+    var onKey = function(e){ if(e.key==="ArrowRight") doFlip(1); if(e.key==="ArrowLeft") doFlip(-1); };
+    var onResize = function(){ index = Math.floor(index/per())*per(); showStatic(); updateChrome(); };
     window.addEventListener("keydown", onKey);
     window.addEventListener("resize", onResize);
     screenCleanup = function(){ window.removeEventListener("keydown", onKey); window.removeEventListener("resize", onResize); };
 
-    buildLayers(); updateChrome();
+    showStatic(); updateChrome();
   }
 
   // ---- Screen: checkout ----

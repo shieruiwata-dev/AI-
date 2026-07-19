@@ -1,0 +1,135 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-cream: var(--cream);
+  --color-coral: var(--coral);
+  --color-sky: var(--sky);
+  --color-butter: var(--butter);
+  --font-sans: "Noto Sans JP", "M PLUS Rounded 1c", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "M PLUS Rounded 1c", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  --shadow-soft: 0 8px 24px -8px rgba(255, 154, 162, 0.35);
+}
+
+:root {
+  --radius: 1rem;
+  --cream: #FFF8F0;
+  --coral: #FF9AA2;
+  --sky: #A8D8EA;
+  --butter: #FFE5A0;
+
+  --background: #FFF8F0;
+  --foreground: #333333;
+  --card: #FFFFFF;
+  --card-foreground: #333333;
+  --popover: #FFFFFF;
+  --popover-foreground: #333333;
+  --primary: #FF9AA2;
+  --primary-foreground: #FFFFFF;
+  --secondary: #A8D8EA;
+  --secondary-foreground: #1F3A47;
+  --muted: #FBEFE4;
+  --muted-foreground: #7A6E63;
+  --accent: #FFE5A0;
+  --accent-foreground: #5A4A1E;
+  --destructive: #E4572E;
+  --destructive-foreground: #FFFFFF;
+  --border: #F3E4D6;
+  --input: #F3E4D6;
+  --ring: #FF9AA2;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+}
+
+@utility btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--coral);
+  color: #fff;
+  padding: 1rem 1.75rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  box-shadow: 0 8px 20px -6px rgba(255, 154, 162, 0.55);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  outline: none;
+  &:hover { transform: translateY(-2px); background-color: #ff858e; box-shadow: 0 14px 28px -8px rgba(255, 154, 162, 0.7); }
+  &:active { transform: translateY(0); box-shadow: 0 8px 20px -6px rgba(255, 154, 162, 0.55); }
+  &:focus-visible { outline: none; box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--coral), 0 8px 20px -6px rgba(255, 154, 162, 0.55); }
+}
+
+@utility btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--sky);
+  color: #1F3A47;
+  padding: 0.9rem 1.5rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  box-shadow: 0 6px 16px -6px rgba(168, 216, 234, 0.6);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  &:hover { transform: translateY(-1px); background-color: #94ccdf; }
+}
+
+@utility btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1rem;
+  border-radius: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  &:hover { background-color: #FBEFE4; }
+}
+
+@utility card-soft {
+  background-color: #ffffff;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px -18px rgba(51, 51, 51, 0.2);
+  border: 1px solid #F3E4D6;
+}

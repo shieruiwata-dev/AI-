@@ -46,20 +46,21 @@ const heroArt = `data:image/svg+xml,${encodeURIComponent(
   </svg>`,
 )}`;
 
-// Book covers for the animated hero columns (warm gradients + emoji).
+// Book covers for the animated hero columns (full-strength warm gradients so
+// they read as printed covers, not empty cards).
 const coverPool = [
-  { emoji: "🚀", tone: "from-[color:var(--sky)]/70 to-[color:var(--butter)]/70" },
-  { emoji: "🦖", tone: "from-[color:var(--butter)]/70 to-[color:var(--coral)]/60" },
-  { emoji: "🐟", tone: "from-[color:var(--sky)]/70 to-[color:var(--coral)]/50" },
-  { emoji: "🌸", tone: "from-[color:var(--coral)]/50 to-[color:var(--butter)]/70" },
-  { emoji: "🎏", tone: "from-[color:var(--butter)]/70 to-[color:var(--sky)]/70" },
-  { emoji: "🐻", tone: "from-[color:var(--coral)]/50 to-[color:var(--sky)]/70" },
-  { emoji: "🌈", tone: "from-[color:var(--sky)]/60 to-[color:var(--butter)]/70" },
-  { emoji: "⭐", tone: "from-[color:var(--butter)]/80 to-[color:var(--coral)]/50" },
-  { emoji: "🏰", tone: "from-[color:var(--coral)]/50 to-[color:var(--sky)]/60" },
-  { emoji: "🚂", tone: "from-[color:var(--sky)]/70 to-[color:var(--coral)]/50" },
-  { emoji: "🦋", tone: "from-[color:var(--butter)]/70 to-[color:var(--sky)]/70" },
-  { emoji: "🌙", tone: "from-[color:var(--sky)]/70 to-[color:var(--butter)]/70" },
+  { emoji: "🚀", tone: "from-[color:var(--sky)] to-[color:var(--butter)]" },
+  { emoji: "🦖", tone: "from-[color:var(--butter)] to-[color:var(--coral)]" },
+  { emoji: "🐟", tone: "from-[color:var(--sky)] to-[#7FBEDB]" },
+  { emoji: "🌸", tone: "from-[color:var(--coral)] to-[color:var(--butter)]" },
+  { emoji: "🎏", tone: "from-[color:var(--butter)] to-[color:var(--sky)]" },
+  { emoji: "🐻", tone: "from-[#FFB3A7] to-[color:var(--sky)]" },
+  { emoji: "🌈", tone: "from-[color:var(--sky)] to-[color:var(--butter)]" },
+  { emoji: "⭐", tone: "from-[color:var(--butter)] to-[#FFB3A7]" },
+  { emoji: "🏰", tone: "from-[color:var(--coral)] to-[color:var(--sky)]" },
+  { emoji: "🚂", tone: "from-[#7FBEDB] to-[color:var(--butter)]" },
+  { emoji: "🦋", tone: "from-[color:var(--butter)] to-[#A8D8EA]" },
+  { emoji: "🌙", tone: "from-[color:var(--sky)] to-[color:var(--coral)]" },
 ];
 // 6 columns × 4 covers, offset so each column differs.
 const coverColumns = Array.from({ length: 6 }, (_, c) =>
@@ -67,10 +68,34 @@ const coverColumns = Array.from({ length: 6 }, (_, c) =>
 );
 const colSpeeds = ["30s", "38s", "26s", "34s", "29s", "42s"];
 
+// A little picture-book cover: spine, big art, and a title-bar skeleton.
+function BookCover({ emoji, tone, size = "text-4xl md:text-5xl" }: { emoji: string; tone: string; size?: string }) {
+  return (
+    <div className={`relative aspect-[3/4] rounded-xl shadow-md bg-gradient-to-br ${tone} overflow-hidden`}>
+      <div className="absolute inset-y-0 left-0 w-1.5 bg-white/60" />
+      <div className="absolute inset-y-0 left-1.5 w-px bg-black/10" />
+      <div className={`absolute inset-0 flex items-center justify-center ${size} drop-shadow-sm`}>{emoji}</div>
+      <div className="absolute left-4 right-4 bottom-3 space-y-1.5">
+        <div className="h-1.5 rounded-full bg-white/80 w-3/4" />
+        <div className="h-1 rounded-full bg-white/55 w-1/2" />
+      </div>
+    </div>
+  );
+}
+
+// Small English kicker above section headings (checkout.com-style rhythm).
+function Kicker({ children }: { children: string }) {
+  return (
+    <div className="text-center text-[11px] font-bold tracking-[0.25em] text-[color:var(--coral)] mb-2">
+      {children}
+    </div>
+  );
+}
+
 const features = [
-  { icon: "🖋️", title: "AIが物語を紡ぐ", desc: "GPT-4があなたのお子さまだけの物語を作成します。" },
-  { icon: "📖", title: "12ページのフルカラー絵本", desc: "美しいイラストと共に、本格的な絵本仕様でお届けします。" },
-  { icon: "🎋", title: "日本文化がいっぱい", desc: "桜・お祭り・招き猫など、日本らしい要素が物語を彩ります。" },
+  { icon: "🖋️", title: "AIが物語を紡ぐ", desc: "GPT-4があなたのお子さまだけの物語を作成します。", chip: "bg-[#FFE9EA]" },
+  { icon: "📖", title: "12ページのフルカラー絵本", desc: "美しいイラストと共に、本格的な絵本仕様でお届けします。", chip: "bg-[color:var(--sky)]/45" },
+  { icon: "🎋", title: "日本文化がいっぱい", desc: "桜・お祭り・招き猫など、日本らしい要素が物語を彩ります。", chip: "bg-[color:var(--butter)]" },
 ];
 
 const steps = [
@@ -80,12 +105,12 @@ const steps = [
 ];
 
 const samples = [
-  { emoji: "🚀", title: "たろうの宇宙大冒険", tone: "from-[color:var(--sky)]/50 to-[color:var(--butter)]/50" },
-  { emoji: "🦖", title: "はなこと恐竜の森", tone: "from-[color:var(--butter)]/60 to-[color:var(--coral)]/40" },
-  { emoji: "🐟", title: "みなとの海のたんけん", tone: "from-[color:var(--sky)]/60 to-[color:var(--coral)]/30" },
-  { emoji: "🌸", title: "さくらの魔法の国", tone: "from-[color:var(--coral)]/30 to-[color:var(--butter)]/60" },
-  { emoji: "🎏", title: "けんとのお祭り物語", tone: "from-[color:var(--butter)]/50 to-[color:var(--sky)]/50" },
-  { emoji: "🐻", title: "ゆいと森のなかまたち", tone: "from-[color:var(--coral)]/30 to-[color:var(--sky)]/50" },
+  { emoji: "🚀", title: "たろうの宇宙大冒険", tone: "from-[color:var(--sky)] to-[color:var(--butter)]" },
+  { emoji: "🦖", title: "はなこと恐竜の森", tone: "from-[color:var(--butter)] to-[color:var(--coral)]" },
+  { emoji: "🐟", title: "みなとの海のたんけん", tone: "from-[color:var(--sky)] to-[#7FBEDB]" },
+  { emoji: "🌸", title: "さくらの魔法の国", tone: "from-[color:var(--coral)] to-[color:var(--butter)]" },
+  { emoji: "🎏", title: "けんとのお祭り物語", tone: "from-[color:var(--butter)] to-[color:var(--sky)]" },
+  { emoji: "🐻", title: "ゆいと森のなかまたち", tone: "from-[#FFB3A7] to-[color:var(--sky)]" },
 ];
 
 const faqs = [
@@ -141,12 +166,7 @@ function LandingPage() {
                   style={{ ["--vspeed" as string]: colSpeeds[c] }}
                 >
                   {[...col, ...col].map((cv, r) => (
-                    <div
-                      key={r}
-                      className={`aspect-[3/4] rounded-xl shadow-md bg-gradient-to-br ${cv.tone} flex items-center justify-center text-4xl md:text-5xl`}
-                    >
-                      {cv.emoji}
-                    </div>
+                    <BookCover key={r} emoji={cv.emoji} tone={cv.tone} />
                   ))}
                 </div>
               </div>
@@ -184,7 +204,7 @@ function LandingPage() {
             </p>
             <div className={RISE} style={rise(380)}>
               <div className="mt-8">
-                <Link to="/create" className="btn-primary text-lg !px-8 !py-4 shadow-[var(--shadow-soft)] hover:shadow-lg">
+                <Link to="/create" className="ds-shimmer btn-primary text-lg !px-8 !py-4 shadow-[var(--shadow-soft)] hover:shadow-lg">
                   絵本を作る →
                 </Link>
               </div>
@@ -195,11 +215,12 @@ function LandingPage() {
 
         {/* ===== Features ===== */}
         <section className="mx-auto max-w-6xl px-4 py-16 reveal">
+          <Kicker>WHY DREAMSTORIES</Kicker>
           <h2 className="text-2xl md:text-3xl text-center">なぜDreamStoriesが選ばれるのか</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {features.map((f) => (
-              <div key={f.title} className="card-soft text-center transition-transform duration-300 hover:-translate-y-1.5 hover:shadow-lg">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--butter)] text-3xl">
+              <div key={f.title} className="group card-soft text-center transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg">
+                <div className={`ds-hover-wiggle mx-auto flex h-16 w-16 items-center justify-center rounded-2xl ${f.chip} text-3xl`}>
                   {f.icon}
                 </div>
                 <h3 className="mt-4 text-lg">{f.title}</h3>
@@ -212,12 +233,13 @@ function LandingPage() {
         {/* ===== How it works ===== */}
         <section className="bg-white/50 border-y border-[color:var(--border)]">
           <div className="mx-auto max-w-6xl px-4 py-16 reveal">
+            <Kicker>HOW IT WORKS</Kicker>
             <h2 className="text-2xl md:text-3xl text-center">3ステップで完成</h2>
             <div className="mt-10 grid gap-8 md:grid-cols-3">
               {steps.map((s, i) => (
                 <div key={s.n} className="relative text-center">
                   <div
-                    className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--coral)] text-white text-3xl font-bold shadow-[var(--shadow-soft)]"
+                    className="relative z-10 mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--coral)] text-white text-3xl font-bold shadow-[var(--shadow-soft)]"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {s.n}
@@ -225,7 +247,7 @@ function LandingPage() {
                   <h3 className="mt-4 text-lg">{s.title}</h3>
                   <p className="mt-2 text-sm text-[color:var(--muted-foreground)] leading-relaxed max-w-xs mx-auto">{s.desc}</p>
                   {i < steps.length - 1 && (
-                    <div className="hidden md:block absolute top-8 -right-4 text-2xl text-[color:var(--coral)]/50">→</div>
+                    <div className="hidden md:block absolute top-8 left-[calc(50%+2.5rem)] w-[calc(100%-3rem)] border-t-2 border-dashed border-[color:var(--coral)]/40" aria-hidden="true" />
                   )}
                 </div>
               ))}
@@ -235,16 +257,15 @@ function LandingPage() {
 
         {/* ===== Sample gallery (auto-scrolling marquee) ===== */}
         <section className="mx-auto max-w-6xl px-4 py-16 reveal">
+          <Kicker>GALLERY</Kicker>
           <h2 className="text-2xl md:text-3xl text-center">実際に生成された絵本</h2>
           <p className="mt-2 text-center text-sm text-[color:var(--muted-foreground)]">世界にひとつの絵本たち</p>
           <div className="mt-10 relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]">
             <div className="ds-marquee flex w-max gap-4">
               {[...samples, ...samples].map((s, i) => (
                 <div key={i} className="w-44 shrink-0">
-                  <div className="card-soft !p-3">
-                    <div className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${s.tone} flex items-center justify-center text-5xl`}>
-                      {s.emoji}
-                    </div>
+                  <div className="card-soft !p-3 transition-transform duration-300 hover:-translate-y-1">
+                    <BookCover emoji={s.emoji} tone={s.tone} size="text-5xl" />
                     <div className="mt-3 text-sm font-semibold text-center truncate">{s.title}</div>
                   </div>
                 </div>
@@ -255,6 +276,7 @@ function LandingPage() {
 
         {/* ===== FAQ ===== */}
         <section className="mx-auto max-w-3xl px-4 py-16 reveal">
+          <Kicker>FAQ</Kicker>
           <h2 className="text-2xl md:text-3xl text-center">よくあるご質問</h2>
           <div className="mt-10 space-y-3">
             {faqs.map((f, i) => (
@@ -279,14 +301,21 @@ function LandingPage() {
 
         {/* ===== CTA banner ===== */}
         <section className="mx-auto max-w-4xl px-4 pb-16 reveal">
-          <div className="rounded-3xl bg-gradient-to-r from-[color:var(--coral)] to-[#ffb3a7] p-10 md:p-14 text-center text-white shadow-[var(--shadow-soft)]">
-            <h2 className="text-2xl md:text-3xl text-white" style={{ fontFamily: "var(--font-display)" }}>
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[color:var(--coral)] to-[#ffb3a7] p-10 md:p-14 text-center text-white shadow-[var(--shadow-soft)]">
+            {/* floating sparkles */}
+            <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+              <span className="ds-float absolute top-6 left-8 text-2xl opacity-60">⭐</span>
+              <span className="ds-float absolute top-10 right-10 text-xl opacity-50" style={{ animationDelay: "-2s" }}>✨</span>
+              <span className="ds-float absolute bottom-8 left-1/4 text-lg opacity-40" style={{ animationDelay: "-4s" }}>💗</span>
+              <span className="ds-float absolute bottom-10 right-1/4 text-xl opacity-50" style={{ animationDelay: "-1s" }}>🌙</span>
+            </div>
+            <h2 className="relative text-2xl md:text-3xl text-white" style={{ fontFamily: "var(--font-display)" }}>
               あなたのお子さまの物語を、今すぐ始めよう
             </h2>
-            <p className="mt-3 text-white/90 text-sm">3分の入力で、世界にひとつの絵本ができあがります。</p>
+            <p className="relative mt-3 text-white/90 text-sm">3分の入力で、世界にひとつの絵本ができあがります。</p>
             <Link
               to="/create"
-              className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-white text-[color:var(--coral)] px-8 py-4 font-bold shadow-lg hover:-translate-y-0.5 transition"
+              className="ds-shimmer relative mt-7 inline-flex items-center gap-2 rounded-2xl bg-white text-[color:var(--coral)] px-8 py-4 font-bold shadow-lg hover:-translate-y-0.5 transition"
             >
               絵本を作る →
             </Link>

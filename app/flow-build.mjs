@@ -261,9 +261,23 @@ ${css}
   ];
   function pvPlaceholder(n){ return "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><rect width="600" height="400" fill="#FFE5A0"/><text x="300" y="215" font-family="sans-serif" font-size="42" fill="#333333" text-anchor="middle">Page ' + n + '</text></svg>'); }
 
+  var pvAudio = null;
+  function pvSwish(){
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+      pvAudio = pvAudio || new AC(); var ctx = pvAudio, dur = 0.18;
+      var buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate*dur), ctx.sampleRate), d = buf.getChannelData(0);
+      for(var i=0;i<d.length;i++){ var t=i/d.length; d[i]=(Math.random()*2-1)*Math.pow(1-t,2); }
+      var src = ctx.createBufferSource(); src.buffer = buf;
+      var bp = ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1800; bp.Q.value=0.7;
+      var g = ctx.createGain(); g.gain.value=0.05;
+      src.connect(bp).connect(g).connect(ctx.destination); src.start();
+    } catch(e){}
+  }
+
   function renderPreview(){
     var total = PV_TEXTS.length;
-    var index = 0;
+    var index = 0, sliding = false, DUR = 400;
     function per(){ return window.innerWidth < 768 ? 1 : 2; }
 
     root.innerHTML =
@@ -276,59 +290,104 @@ ${css}
       + '<div class="min-h-screen flex flex-col bg-[color:var(--cream)]">'
       + '<main class="flex-1 mx-auto w-full max-w-5xl px-4 py-6">'
       + '<div class="text-center text-xs text-[color:var(--muted-foreground)] mb-3">プレビュー #demo</div>'
-      + '<div id="pvWrap" class="relative">'
-      + '<div id="pvSpread" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 animate-in fade-in duration-300"></div>'
-      + '<button id="pvPrev" class="absolute -left-2 md:-left-5 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-white shadow-md border border-[color:var(--border)] text-xl text-[color:var(--coral)] disabled:opacity-30 transition" aria-label="前へ">←</button>'
-      + '<button id="pvNext" class="absolute -right-2 md:-right-5 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-white shadow-md border border-[color:var(--border)] text-xl text-[color:var(--coral)] disabled:opacity-30 transition" aria-label="次へ">→</button>'
+      + '<div class="relative">'
+      + '<div id="pvViewport" class="overflow-hidden select-none" style="touch-action:pan-y"><div id="pvTrack" class="relative will-change-transform" style="transform:translateX(0)"></div></div>'
+      + '<button id="pvPrev" class="absolute -left-2 md:-left-5 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-white shadow-md border border-[color:var(--border)] text-xl text-[color:var(--coral)] disabled:opacity-30 transition z-20" aria-label="前へ">←</button>'
+      + '<button id="pvNext" class="absolute -right-2 md:-right-5 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-white shadow-md border border-[color:var(--border)] text-xl text-[color:var(--coral)] disabled:opacity-30 transition z-20" aria-label="次へ">→</button>'
       + '</div>'
       + '<div class="mt-6 flex items-center justify-center gap-3"><div id="pvDots" class="flex gap-1.5"></div><span id="pvLabel" class="text-sm text-[color:var(--muted-foreground)] tabular-nums"></span></div>'
       + '</main>'
       + '<div class="sticky bottom-0 border-t border-[color:var(--border)] bg-[color:var(--cream)]/90 backdrop-blur"><div class="mx-auto max-w-5xl px-4 py-3"><a id="pvBuy" data-href="/checkout/demo" class="btn-primary w-full text-base !py-4 transition" style="cursor:pointer">この絵本を購入する（5,000円）</a></div></div>'
       + '</div>';
 
-    function fade(){ var s = document.getElementById("pvSpread"); s.classList.remove("animate-in","fade-in"); void s.offsetWidth; s.classList.add("animate-in","fade-in"); }
-    function paint(){
-      var p = per();
-      var lastIndex = (Math.ceil(total/p)-1)*p;
+    var viewport = document.getElementById("pvViewport"), track = document.getElementById("pvTrack");
+    var prevBtn = document.getElementById("pvPrev"), nextBtn = document.getElementById("pvNext");
+
+    function cardHTML(n, text){
+      return '<div class="relative rounded-2xl overflow-hidden bg-white border border-[color:var(--border)] shadow-[0_10px_30px_-14px_rgba(120,90,70,0.4)]">'
+        + '<div class="pointer-events-none absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-black/10 to-transparent z-10"></div>'
+        + '<div class="pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-black/10 to-transparent z-10"></div>'
+        + '<img src="' + pvPlaceholder(n) + '" alt="ページ' + n + 'のイラスト" class="w-full aspect-[3/2] object-cover" draggable="false" />'
+        + '<div class="p-5 md:p-7 min-h-[7rem]"><p class="text-base md:text-lg leading-loose" style="font-family:var(--font-display)">' + esc(text) + '</p><div class="mt-4 text-xs text-[color:var(--muted-foreground)] text-right">— ' + n + ' —</div></div></div>';
+    }
+    function viewHTML(start){
+      var p = per(); if(start < 0 || start >= total) return "";
+      var h = '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">';
+      for(var k=start; k<start+p && k<total; k++) h += cardHTML(k+1, PV_TEXTS[k]);
+      return h + '</div>';
+    }
+    function buildLayers(){
+      var p = per(), lastIndex = (Math.ceil(total/p)-1)*p;
       index = Math.min(Math.floor(index/p)*p, lastIndex);
-      var spread = document.getElementById("pvSpread");
-      spread.innerHTML = "";
-      for(var k=index; k<index+p && k<total; k++){
-        var n = k+1;
-        var card = document.createElement("div");
-        card.className = "rounded-2xl overflow-hidden bg-white border border-[color:var(--border)] shadow-[0_10px_30px_-14px_rgba(120,90,70,0.35)]";
-        card.innerHTML = '<img src="' + pvPlaceholder(n) + '" alt="ページ' + n + 'のイラスト" class="w-full aspect-[3/2] object-cover" /><div class="p-5 md:p-7"><p class="text-base md:text-lg leading-loose" style="font-family:var(--font-display)">' + esc(PV_TEXTS[k]) + '</p><div class="mt-4 text-xs text-[color:var(--muted-foreground)] text-right">— ' + n + ' —</div></div>';
-        spread.appendChild(card);
-      }
+      track.innerHTML = viewHTML(index)
+        + '<div class="absolute inset-0" style="transform:translateX(-100%)">' + viewHTML(index+p) + '</div>'
+        + '<div class="absolute inset-0" style="transform:translateX(100%)">' + viewHTML(index-p) + '</div>';
+    }
+    function setTrack(px, animate){ track.style.transition = animate ? ("transform " + DUR + "ms ease-out") : "none"; track.style.transform = "translateX(" + px + "px)"; }
+    function updateChrome(){
+      var p = per(), lastIndex = (Math.ceil(total/p)-1)*p, atStart = index===0, atEnd = index>=lastIndex;
       var views = Math.ceil(total/p), cur = Math.floor(index/p);
       var dots = document.getElementById("pvDots"); dots.innerHTML = "";
       for(var v=0; v<views; v++){ var s = document.createElement("span"); s.className = "h-2 rounded-full transition-all " + (v===cur ? "w-5 bg-[color:var(--coral)]" : "w-2 bg-[color:var(--border)]"); dots.appendChild(s); }
-      document.getElementById("pvLabel").textContent = p>1 ? (index+1)+"–"+Math.min(index+p,total)+" / "+total : (index+1)+" / "+total;
-      var atStart = index===0, atEnd = index>=lastIndex;
-      document.getElementById("pvPrev").disabled = atStart;
-      document.getElementById("pvNext").disabled = atEnd;
+      var lbl = document.getElementById("pvLabel");
+      lbl.textContent = p>1 ? (index+1)+"–"+Math.min(index+p,total)+" / "+total : (index+1)+" / "+total;
+      lbl.classList.remove("animate-in","fade-in","zoom-in-95"); void lbl.offsetWidth; lbl.classList.add("animate-in","fade-in","zoom-in-95");
+      prevBtn.disabled = atStart || sliding; nextBtn.disabled = atEnd || sliding;
       var buy = document.getElementById("pvBuy");
-      if(atEnd){ buy.classList.add("ring-4","ring-[color:var(--butter)]","scale-[1.01]"); }
-      else { buy.classList.remove("ring-4","ring-[color:var(--butter)]","scale-[1.01]"); }
+      if(atEnd){ buy.classList.add("ring-4","ring-[color:var(--butter)]","scale-[1.01]"); } else { buy.classList.remove("ring-4","ring-[color:var(--butter)]","scale-[1.01]"); }
     }
-    function go(dir){ var p = per(); var lastIndex = (Math.ceil(total/p)-1)*p; var ni = Math.max(0, Math.min(index + dir*p, lastIndex)); if(ni!==index){ index = ni; fade(); } paint(); }
+    function commit(dir){
+      var p = per(), lastIndex = (Math.ceil(total/p)-1)*p;
+      index = Math.max(0, Math.min(index + dir*p, lastIndex));
+      buildLayers(); setTrack(0, false); sliding = false; pvSwish(); updateChrome();
+    }
+    function slide(dir){
+      var p = per(), lastIndex = (Math.ceil(total/p)-1)*p;
+      if(sliding) return;
+      if(dir>0 && index>=lastIndex) return;
+      if(dir<0 && index===0) return;
+      var W = viewport.clientWidth;
+      sliding = true; updateChrome(); setTrack(0, false);
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ setTrack(dir*W, true); }); });
+      setTimeout(function(){ commit(dir); }, DUR);
+    }
 
-    document.getElementById("pvPrev").addEventListener("click", function(){ go(-1); });
-    document.getElementById("pvNext").addEventListener("click", function(){ go(1); });
+    prevBtn.addEventListener("click", function(){ slide(-1); });
+    nextBtn.addEventListener("click", function(){ slide(1); });
 
-    // swipe (mobile)
-    var wrap = document.getElementById("pvWrap"), tx = null;
-    wrap.addEventListener("touchstart", function(e){ tx = e.touches[0].clientX; }, { passive:true });
-    wrap.addEventListener("touchend", function(e){ if(tx==null) return; var dx = e.changedTouches[0].clientX - tx; if(Math.abs(dx)>40) go(dx<0?1:-1); tx = null; });
+    // pointer drag (finger-follow)
+    var drag = { active:false, startX:0, w:0, dx:0 };
+    viewport.addEventListener("pointerdown", function(e){
+      if(sliding) return;
+      drag = { active:true, startX:e.clientX, w:viewport.clientWidth, dx:0 };
+      setTrack(0, false); try{ viewport.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    viewport.addEventListener("pointermove", function(e){
+      if(!drag.active) return;
+      var p = per(), lastIndex = (Math.ceil(total/p)-1)*p, atStart = index===0, atEnd = index>=lastIndex;
+      var dx = e.clientX - drag.startX;
+      if((dx>0 && atEnd) || (dx<0 && atStart)) dx *= 0.25;
+      drag.dx = dx; setTrack(dx, false);
+    });
+    function endDrag(){
+      if(!drag.active) return; drag.active = false;
+      var p = per(), lastIndex = (Math.ceil(total/p)-1)*p, atStart = index===0, atEnd = index>=lastIndex;
+      var W = drag.w, dx = drag.dx, th = W*0.22;
+      if(dx>th && !atEnd){ sliding=true; updateChrome(); setTrack(W, true); setTimeout(function(){ commit(1); }, DUR); }
+      else if(dx<-th && !atStart){ sliding=true; updateChrome(); setTrack(-W, true); setTimeout(function(){ commit(-1); }, DUR); }
+      else { setTrack(0, true); }
+    }
+    viewport.addEventListener("pointerup", endDrag);
+    viewport.addEventListener("pointercancel", endDrag);
 
     // keyboard + resize (cleaned up on screen change)
-    var onKey = function(e){ if(e.key==="ArrowLeft") go(-1); if(e.key==="ArrowRight") go(1); };
-    var onResize = function(){ paint(); };
+    var onKey = function(e){ if(e.key==="ArrowRight") slide(1); if(e.key==="ArrowLeft") slide(-1); };
+    var onResize = function(){ buildLayers(); setTrack(0, false); updateChrome(); };
     window.addEventListener("keydown", onKey);
     window.addEventListener("resize", onResize);
     screenCleanup = function(){ window.removeEventListener("keydown", onKey); window.removeEventListener("resize", onResize); };
 
-    paint();
+    buildLayers(); updateChrome();
   }
 
   // ---- Screen: checkout ----

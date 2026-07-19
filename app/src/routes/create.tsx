@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { BookCover } from "@/components/BookCover";
+import { FlipBook } from "@/components/FlipBook";
 import {
   saveExtractedParams,
   generateStory,
@@ -200,10 +201,8 @@ function CreatePage() {
   const inputDisabled = typing || mode === "theme" || mode === "locked";
 
   // ring geometry (generating pane)
-  const R = 70;
+  const R = 82;
   const C = 2 * Math.PI * R;
-
-  const current = book?.pages[page] ?? null;
 
   return (
     <div className="h-dvh flex flex-col bg-[color:var(--cream)]">
@@ -312,18 +311,29 @@ function CreatePage() {
 
         {/* ==== Right: live book pane ==== */}
         <section className={`${tab === "chat" ? "hidden md:flex" : "flex"} h-full min-h-0 flex-col mt-4 md:mt-0`}>
-          <div className="flex-1 min-h-0 overflow-y-auto rounded-3xl border border-[color:var(--border)] bg-white/60 p-4 md:p-6">
+          <div className="relative flex-1 min-h-0 overflow-y-auto rounded-3xl border border-[color:var(--border)] bg-gradient-to-b from-white/80 to-[#FFF1EC] p-4 md:p-6">
+            {/* atmospheric backdrop (same language as the hero) */}
+            <div className="pointer-events-none absolute inset-0 -z-0" aria-hidden="true">
+              <div className="ds-blob absolute -top-16 -left-10 h-56 w-56 rounded-full bg-[color:var(--sky)] opacity-20 blur-3xl" />
+              <div className="ds-blob absolute bottom-0 -right-10 h-64 w-64 rounded-full bg-[color:var(--coral)] opacity-15 blur-3xl" style={{ animationDelay: "-8s" }} />
+            </div>
             {phase === "chat" && (
               // ① 回答中：下書きカードが埋まっていく
-              <div className="h-full flex flex-col items-center justify-center text-center gap-5">
-                <div className="w-40 md:w-48">
+              <div className="relative h-full flex flex-col items-center justify-center text-center gap-5">
+                <div className="ds-float w-40 md:w-48 drop-shadow-xl">
                   <BookCover
+                    key={data.current.themeEmoji || "blank"}
                     emoji={data.current.themeEmoji || "📖"}
                     tone="from-[color:var(--sky)] to-[color:var(--butter)]"
                     size="text-5xl"
-                    className={data.current.themeEmoji ? "" : "opacity-70 grayscale-[30%]"}
+                    className={`animate-in fade-in zoom-in-95 duration-500 ${data.current.themeEmoji ? "" : "opacity-70 grayscale-[30%]"}`}
                   />
                 </div>
+                {data.current.name && (
+                  <p key={data.current.name} className="animate-in fade-in zoom-in-95 duration-500 text-lg" style={{ fontFamily: "var(--font-display)" }}>
+                    {data.current.name}ちゃんの えほん
+                  </p>
+                )}
                 <div className="w-full max-w-xs text-left text-sm space-y-2">
                   {[
                     { label: "おなまえ", value: data.current.name },
@@ -348,10 +358,24 @@ function CreatePage() {
             )}
 
             {phase === "generating" && (
-              // ② 生成中：進捗リング
-              <div className="h-full flex flex-col items-center justify-center text-center gap-4">
-                <div className="relative h-40 w-40">
-                  <svg viewBox="0 0 160 160" className="h-40 w-40 -rotate-90">
+              // ② 生成中：進捗リング＋星の舞い（/generating画面と同じ演出）
+              <div className="relative h-full flex flex-col items-center justify-center text-center gap-5 overflow-hidden">
+                <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                  {[
+                    { e: "⭐", l: "10%", d: "0s", s: "7s" },
+                    { e: "💗", l: "26%", d: "2.4s", s: "8s" },
+                    { e: "✨", l: "44%", d: "1.2s", s: "6.5s" },
+                    { e: "🌟", l: "62%", d: "3.1s", s: "7.5s" },
+                    { e: "💗", l: "78%", d: "0.6s", s: "8.5s" },
+                    { e: "🌙", l: "90%", d: "1.8s", s: "9s" },
+                  ].map((s, i) => (
+                    <span key={i} className="ds-rise absolute bottom-8 text-base" style={{ left: s.l, ["--rspeed" as string]: s.s, animationDelay: s.d }}>
+                      {s.e}
+                    </span>
+                  ))}
+                </div>
+                <div className="relative h-48 w-48">
+                  <svg viewBox="0 0 200 200" className="h-48 w-48 -rotate-90">
                     <defs>
                       <linearGradient id="studioRing" x1="0" y1="0" x2="1" y2="1">
                         <stop offset="0" stopColor="#FF9AA2" />
@@ -359,21 +383,27 @@ function CreatePage() {
                         <stop offset="1" stopColor="#FFE5A0" />
                       </linearGradient>
                     </defs>
-                    <circle cx="80" cy="80" r={R} fill="none" stroke="var(--muted)" strokeWidth="12" />
-                    <circle cx="80" cy="80" r={R} fill="none" stroke="url(#studioRing)" strokeWidth="12" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - progress.percent / 100)} style={{ transition: "stroke-dashoffset 0.25s ease" }} />
+                    <circle cx="100" cy="100" r={R} fill="none" stroke="var(--muted)" strokeWidth="14" />
+                    <circle cx="100" cy="100" r={R} fill="none" stroke="url(#studioRing)" strokeWidth="14" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - progress.percent / 100)} style={{ transition: "stroke-dashoffset 0.25s ease" }} />
                   </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-3xl font-bold text-[color:var(--coral)] tabular-nums" style={{ fontFamily: "var(--font-display)" }}>{progress.percent}%</span>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-5xl font-bold text-[color:var(--coral)] tabular-nums leading-none" style={{ fontFamily: "var(--font-display)" }}>
+                      {progress.percent}
+                      <span className="text-xl align-top">%</span>
+                    </span>
+                    <span className="mt-1 text-xs text-[color:var(--muted-foreground)]">生成中</span>
                   </div>
                 </div>
-                <p key={progress.stage} className="animate-in fade-in duration-500 font-semibold">{STAGE_TEXT[progress.stage]}</p>
+                <div className="h-7">
+                  <p key={progress.stage} className="animate-in fade-in duration-500 text-lg font-semibold">{STAGE_TEXT[progress.stage]}</p>
+                </div>
                 <p className="text-xs text-[color:var(--muted-foreground)]">できあがると、ここに絵本があらわれます</p>
               </div>
             )}
 
-            {phase === "ready" && book && current && (
-              // ③ 完成：プレビュー＋調整
-              <div className="flex flex-col gap-3">
+            {phase === "ready" && book && (
+              // ③ 完成：本格3Dめくりプレビュー＋調整
+              <div className="relative flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {/* title row (editable) */}
                 <div className="flex items-center justify-center gap-2">
                   {editingTitle ? (
@@ -389,30 +419,21 @@ function CreatePage() {
                   )}
                 </div>
 
-                {/* page viewer */}
-                <div key={`${page}-${current.text}`} className="animate-in fade-in duration-300 rounded-2xl overflow-hidden bg-white border border-[color:var(--border)] shadow-[0_10px_30px_-14px_rgba(120,90,70,0.4)]">
-                  <img src={current.image_url} alt={`ページ${current.page_number}のイラスト`} className="w-full aspect-[3/2] object-cover" draggable={false} />
-                  <div className="p-4 md:p-5 h-32 flex flex-col">
-                    <p className="text-sm md:text-base leading-loose flex-1 overflow-hidden" style={{ fontFamily: "var(--font-display)" }}>{current.text}</p>
-                    <div className="text-xs text-[color:var(--muted-foreground)] text-right">— {current.page_number} —</div>
-                  </div>
+                {/* 本物のようにめくれるプレビュー（/previewと同じFlipBook） */}
+                <div className="px-3 md:px-5">
+                  <FlipBook pages={book.pages} per={1} onIndexChange={setPage} />
                 </div>
 
-                {/* pager + regen */}
-                <div className="flex items-center justify-between gap-2">
-                  <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="h-10 w-10 shrink-0 rounded-full bg-white shadow border border-[color:var(--border)] text-[color:var(--coral)] disabled:opacity-30" aria-label="前へ">←</button>
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-xs text-[color:var(--muted-foreground)] tabular-nums">{page + 1} / {book.pages.length}</span>
-                    <button onClick={regen} disabled={regenBusy} className="rounded-full border-2 border-[color:var(--coral)] bg-white px-4 py-1.5 text-xs font-bold text-[color:var(--coral)] hover:bg-[color:var(--coral)] hover:text-white transition-colors disabled:opacity-50">
-                      {regenBusy ? "描き直しています…" : "🔄 このページを描き直す"}
-                    </button>
-                  </div>
-                  <button onClick={() => setPage((p) => Math.min(book.pages.length - 1, p + 1))} disabled={page === book.pages.length - 1} className="h-10 w-10 shrink-0 rounded-full bg-white shadow border border-[color:var(--border)] text-[color:var(--coral)] disabled:opacity-30" aria-label="次へ">→</button>
+                {/* regen */}
+                <div className="flex justify-center">
+                  <button onClick={regen} disabled={regenBusy} className="rounded-full border-2 border-[color:var(--coral)] bg-white px-5 py-2 text-xs font-bold text-[color:var(--coral)] hover:bg-[color:var(--coral)] hover:text-white transition-colors disabled:opacity-50">
+                    {regenBusy ? "描き直しています…" : "🔄 このページを描き直す"}
+                  </button>
                 </div>
 
                 {/* actions */}
                 <div className="mt-1 space-y-2">
-                  <Link to="/checkout/$id" params={{ id: book.book_id }} className="btn-primary w-full text-base !py-3.5">
+                  <Link to="/checkout/$id" params={{ id: book.book_id }} className="ds-shimmer btn-primary w-full text-base !py-3.5">
                     この絵本を購入する（5,000円）
                   </Link>
                   <Link to="/preview/$id" params={{ id: book.book_id }} className="block text-center text-xs text-[color:var(--muted-foreground)] underline underline-offset-2">

@@ -1,0 +1,211 @@
+// ---------------------------------------------------------------------------
+// API窓口（Week 5〜7 でここだけ本物に差し替える）
+//
+// 資料第8章の合意インタフェースどおりの型・関数シグネチャで定義してあります。
+// いまは全関数がモック（ダミー）実装で、画面の挙動はこれまでと同じです。
+//
+// Week 5（柴崎さんとペア作業）でやること：
+//   1. API_BASE に Edge Function のベースURLを設定
+//      例) https://[プロジェクト].supabase.co/functions/v1
+//   2. 各関数の「MOCK」ブロックを fetch() に置き換える
+// UI側（各画面）はこのファイルしか見ていないので、画面の修正は不要です。
+// ---------------------------------------------------------------------------
+
+export const API_BASE = ""; // WEEK5: 柴崎さんから受け取るEdge FunctionのURLを設定
+
+// ===== 型（資料第8章のJSON仕様と同じ形） =====
+
+export type ExtractedParams = {
+  child_name: string;
+  age: number | string;
+  interests: string;
+  theme: string;
+  language: string; // "ja"
+};
+
+export type DifyChatRequest = {
+  message: string;
+  conversation_id: string | null; // 初回はnull、以降レスポンスの値を使う
+};
+
+export type DifyChatResponse = {
+  answer: string;
+  conversation_id: string;
+  is_complete: boolean;
+  extracted_params?: ExtractedParams; // is_complete=true のときのみ
+};
+
+export type BookPage = {
+  page_number: number;
+  text: string;
+  image_url: string;
+};
+
+export type GenerateStoryResponse = {
+  success: boolean;
+  book_id: string;
+  title: string;
+  pages: BookPage[];
+  error?: string;
+};
+
+export type GenerateProgress = {
+  percent: number; // 0-100
+  stage: "imagining" | "story_generation" | "image_generation" | "finalize";
+};
+
+export type LibraryBook = {
+  id: string;
+  title: string;
+  status: "generating" | "completed" | "paid"; // booksテーブルのstatusと同じ
+  created_at: string;
+  cover_emoji: string;
+  cover_tone: string;
+};
+
+// ===== SessionStorage（資料 Week5 Day2-3 の指定どおり） =====
+
+const PARAMS_KEY = "ds:extracted_params";
+const BOOK_KEY = (id: string) => `ds:book:${id}`;
+
+export function saveExtractedParams(p: ExtractedParams) {
+  try { sessionStorage.setItem(PARAMS_KEY, JSON.stringify(p)); } catch { /* private mode等 */ }
+}
+
+export function loadExtractedParams(): ExtractedParams | null {
+  try {
+    const raw = sessionStorage.getItem(PARAMS_KEY);
+    return raw ? (JSON.parse(raw) as ExtractedParams) : null;
+  } catch { return null; }
+}
+
+// ===== モック用データ =====
+
+const placeholderImage = (n: number) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><rect width="600" height="400" fill="#FFE5A0"/><text x="300" y="215" font-family="sans-serif" font-size="42" fill="#333333" text-anchor="middle">Page ${n}</text></svg>`,
+  )}`;
+
+const mockTexts = (name: string) => [
+  `むかしむかし、${name}は、ふしぎな もりへ でかけました。`,
+  "もりの いりぐちで、しろい うさぎに であいました。",
+  "うさぎは「ぼくと いっしょに ぼうけんしない？」と いいました。",
+  "ふたりは もりの おくへ すすんでいきます。",
+  "きれいな はなばたけが ひろがっていました。",
+  "そらには おおきな にじが かかっています。",
+  "もりの くまさんも おともだちに なりました。",
+  "やまの てっぺんを めざして のぼります。",
+  "うみのような おおきな みずうみが みえました。",
+  "さくらの きの したで ひとやすみ。",
+  "よるには まんてんの ほしぞらが ひろがります。",
+  `${name}の ぼうけんは、まだまだ つづきます。`,
+];
+
+function mockBook(params: ExtractedParams | null): GenerateStoryResponse {
+  const name = params?.child_name ? `${params.child_name}` : "たろう";
+  const theme = params?.theme ?? "ぼうけん";
+  return {
+    success: true,
+    book_id: "demo",
+    title: `${name}くんの ${theme}`,
+    pages: mockTexts(`${name}くん`).map((text, i) => ({
+      page_number: i + 1,
+      text,
+      image_url: placeholderImage(i + 1),
+    })),
+  };
+}
+
+// ===== API関数（Week 5〜7 でMOCKブロックをfetchに差し替え） =====
+
+/**
+ * オンボードチャット（Edge Function: dify-chat）
+ * WEEK5: POST `${API_BASE}/dify-chat` に差し替え。
+ * ※現在チャット画面はハードコード対話のためこの関数は未使用。
+ *   差し替え時は create.tsx の台本ロジックをこの関数呼び出しに置き換える。
+ */
+export async function difyChat(req: DifyChatRequest): Promise<DifyChatResponse> {
+  // --- MOCK ---
+  return {
+    answer: `（モック応答）${req.message}`,
+    conversation_id: req.conversation_id ?? "mock-conversation",
+    is_complete: false,
+  };
+}
+
+/**
+ * 絵本生成（Edge Function: generate-story）
+ * WEEK5: POST `${API_BASE}/generate-story`。Difyのストリーミング応答の
+ * stage（story_generation / image_generation / finalize）を onProgress に流す。
+ */
+export function generateStory(
+  params: ExtractedParams | null,
+  onProgress?: (p: GenerateProgress) => void,
+  signal?: AbortSignal,
+): Promise<GenerateStoryResponse> {
+  // --- MOCK: 疑似進捗（各ステージ20〜30秒・不均等に増加） ---
+  const STAGES: { to: number; stage: GenerateProgress["stage"]; ms: number }[] = [
+    { to: 20, stage: "imagining", ms: 22000 },
+    { to: 50, stage: "story_generation", ms: 26000 },
+    { to: 90, stage: "image_generation", ms: 28000 },
+    { to: 100, stage: "finalize", ms: 22000 },
+  ];
+  const TICK = 120;
+  return new Promise((resolve, reject) => {
+    let p = 0;
+    const id = setInterval(() => {
+      const si = Math.max(0, STAGES.findIndex((s) => p < s.to));
+      const prevTo = si === 0 ? 0 : STAGES[si - 1].to;
+      const perTick = (STAGES[si].to - prevTo) / (STAGES[si].ms / TICK);
+      p = Math.min(100, p + perTick * (0.3 + Math.random() * 1.5));
+      onProgress?.({ percent: Math.min(100, Math.round(p)), stage: STAGES[si].stage });
+      if (p >= 100) {
+        clearInterval(id);
+        const book = mockBook(params);
+        try { sessionStorage.setItem(BOOK_KEY(book.book_id), JSON.stringify(book)); } catch { /* ignore */ }
+        resolve(book);
+      }
+    }, TICK);
+    signal?.addEventListener("abort", () => {
+      clearInterval(id);
+      reject(new DOMException("aborted", "AbortError"));
+    });
+  });
+}
+
+/**
+ * 絵本データ取得（Week 6でSupabase booksテーブルから取得に差し替え）
+ * WEEK6: SELECT * FROM books WHERE id = :id AND user_id = :current_user
+ */
+export async function getBook(id: string): Promise<GenerateStoryResponse> {
+  // --- MOCK: 生成直後はSessionStorageにあるものを返す。なければデフォルト ---
+  try {
+    const raw = sessionStorage.getItem(BOOK_KEY(id));
+    if (raw) return JSON.parse(raw) as GenerateStoryResponse;
+  } catch { /* ignore */ }
+  return mockBook(loadExtractedParams());
+}
+
+/**
+ * マイページの絵本一覧（Week 6でSupabaseから取得に差し替え）
+ */
+export async function listBooks(): Promise<LibraryBook[]> {
+  // --- MOCK ---
+  return [
+    { id: "demo", title: "ゆうきくんの森の冒険", status: "paid", created_at: "2025-07-15", cover_emoji: "🌳", cover_tone: "from-[color:var(--sky)] to-[color:var(--butter)]" },
+    { id: "b2", title: "さくらちゃんとお星さま", status: "paid", created_at: "2025-06-30", cover_emoji: "⭐", cover_tone: "from-[color:var(--butter)] to-[#FFB3A7]" },
+    { id: "b3", title: "ひろとの海の大冒険", status: "completed", created_at: "-", cover_emoji: "🌊", cover_tone: "from-[color:var(--sky)] to-[#7FBEDB]" },
+  ];
+}
+
+/**
+ * Stripe決済セッション作成（Edge Function: create-checkout-session）
+ * WEEK7: POST `${API_BASE}/create-checkout-session` { book_id } に差し替え。
+ * 本物は { checkout_url } が返るので window.location.href でリダイレクトする。
+ */
+export async function createCheckoutSession(bookId: string): Promise<{ checkout_url: string | null }> {
+  // --- MOCK: 決済ページなし（nullを返すと画面側が疑似成功フローに進む） ---
+  void bookId;
+  await new Promise((r) => setTimeout(r, 1000));
+  return { checkout_url: null };
+}

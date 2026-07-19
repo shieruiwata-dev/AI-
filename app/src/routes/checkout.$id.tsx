@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Toast } from "@/components/Toast";
+import { createCheckoutSession } from "@/lib/api";
 
 export const Route = createFileRoute("/checkout/$id")({
   component: CheckoutPage,
@@ -13,14 +14,20 @@ function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  const handlePurchase = (e: React.FormEvent) => {
+  const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setToast("購入が完了しました！");
-      setTimeout(() => navigate({ to: "/mypage" }), 1200);
-    }, 1000);
+    // WEEK7: 本物のEdge Functionは checkout_url を返すので、Stripeの
+    //        Checkoutページへリダイレクトする（api.ts参照）。
+    const res = await createCheckoutSession(id);
+    if (res.checkout_url) {
+      window.location.href = res.checkout_url;
+      return;
+    }
+    // モック時（checkout_urlなし）は疑似成功フロー
+    setLoading(false);
+    setToast("購入が完了しました！");
+    setTimeout(() => navigate({ to: "/mypage" }), 1200);
   };
 
   return (

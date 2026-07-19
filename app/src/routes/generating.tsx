@@ -1,22 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
+import { generateStory, loadExtractedParams, type GenerateProgress } from "@/lib/api";
 
 export const Route = createFileRoute("/generating")({
   component: GeneratingPage,
 });
 
-// Stage → upper bound of progress + status text.
-const STAGES = [
-  { to: 20, text: "お子さまの世界を想像しています…" },
-  { to: 50, text: "物語を書いています…" },
-  { to: 90, text: "イラストを描いています…" },
-  { to: 100, text: "絵本を仕上げています…" },
-];
-// Rough time budget per stage (ms). Spec: each ~20–30s. Pseudo only — replaced
-// by the real Dify streaming progress in Week 5. Lower these to demo faster.
-const STAGE_MS = [22000, 26000, 28000, 22000];
-const TICK = 120;
+// stage（APIの進捗イベント）→ 画面に出すステータス文言
+const STAGE_TEXT: Record<GenerateProgress["stage"], string> = {
+  imagining: "お子さまの世界を想像しています…",
+  story_generation: "物語を書いています…",
+  image_generation: "イラストを描いています…",
+  finalize: "絵本を仕上げています…",
+};
 
 // Floating background sparkles (subtle).
 const sparkles = [
@@ -32,34 +29,34 @@ const sparkles = [
 
 function GeneratingPage() {
   const navigate = useNavigate();
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState<GenerateProgress>({ percent: 0, stage: "imagining" });
   const [done, setDone] = useState(false);
-  const pref = useRef(0);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      let p = pref.current;
-      const si = Math.max(0, STAGES.findIndex((s) => p < s.to));
-      const prevTo = si === 0 ? 0 : STAGES[si - 1].to;
-      const range = STAGES[si].to - prevTo;
-      const perTick = range / (STAGE_MS[si] / TICK);
-      // Uneven, "living" progress.
-      p = Math.min(100, p + perTick * (0.3 + Math.random() * 1.5));
-      pref.current = p;
-      setProgress(p);
-      if (p >= 100) {
-        clearInterval(id);
+    // 各マウントが自分の生成を開始し、アンマウント時にabortで中断する
+    // （開発時のStrictMode再マウントでも正しく動く標準形）
+    const ac = new AbortController();
+
+    // チャットで収集したパラメータを読み出して生成APIへ。
+    // WEEK5: generateStory の中身をEdge Function呼び出しに差し替えるだけで、
+    //        この画面は修正不要（api.ts参照）。
+    const params = loadExtractedParams();
+    generateStory(params, setProgress, ac.signal)
+      .then((book) => {
         setDone(true);
-        setTimeout(() => navigate({ to: "/preview/$id", params: { id: "demo" } }), 2000);
-      }
-    }, TICK);
-    return () => clearInterval(id);
+        setTimeout(() => navigate({ to: "/preview/$id", params: { id: book.book_id } }), 2000);
+      })
+      .catch((e: unknown) => {
+        if ((e as DOMException)?.name === "AbortError") return;
+        // WEEK5: 失敗レスポンス時は「もう一度作る」導線を表示する予定
+        console.error(e);
+      });
+
+    return () => ac.abort();
   }, [navigate]);
 
-  const pct = Math.min(100, Math.round(progress));
-  const status = done
-    ? "完成！プレビューへ移動します…"
-    : (STAGES.find((s) => progress < s.to)?.text ?? STAGES[STAGES.length - 1].text);
+  const pct = progress.percent;
+  const status = done ? "完成！プレビューへ移動します…" : STAGE_TEXT[progress.stage];
 
   // Circular ring geometry.
   const R = 95;

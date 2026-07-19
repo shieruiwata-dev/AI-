@@ -2,41 +2,18 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Toast } from "@/components/Toast";
+import { getBook, type BookPage } from "@/lib/api";
 
 export const Route = createFileRoute("/preview/$id")({
   component: PreviewPage,
 });
 
-const TITLE = "たろうくんの ぼうけん";
 const DURATION = 700; // ms per page flip
 const EASE = "cubic-bezier(0.42, 0, 0.2, 1)";
 
-const placeholder = (n: number) =>
-  `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><rect width="600" height="400" fill="#FFE5A0"/><text x="300" y="215" font-family="sans-serif" font-size="42" fill="#333333" text-anchor="middle">Page ${n}</text></svg>`,
-  )}`;
-
-const texts = [
-  "むかしむかし、たろうくんは、ふしぎな もりへ でかけました。",
-  "もりの いりぐちで、しろい うさぎに であいました。",
-  "うさぎは「ぼくと いっしょに ぼうけんしない？」と いいました。",
-  "ふたりは もりの おくへ すすんでいきます。",
-  "きれいな はなばたけが ひろがっていました。",
-  "そらには おおきな にじが かかっています。",
-  "もりの くまさんも おともだちに なりました。",
-  "やまの てっぺんを めざして のぼります。",
-  "うみのような おおきな みずうみが みえました。",
-  "さくらの きの したで ひとやすみ。",
-  "よるには まんてんの ほしぞらが ひろがります。",
-  "たろうくんの ぼうけんは、まだまだ つづきます。",
-];
-
-const pages = texts.map((text, i) => ({ n: i + 1, img: placeholder(i + 1), text }));
-const P = (i: number) => (i >= 0 && i < pages.length ? pages[i] : null);
-
 // A single book page. `side` rounds only the outer corners so pages meet flat
 // at the spine like a real book.
-function Page({ p, side }: { p: (typeof pages)[number] | null; side: "left" | "right" | "single" }) {
+function Page({ p, side }: { p: BookPage | null; side: "left" | "right" | "single" }) {
   const round =
     side === "left" ? "rounded-l-2xl" : side === "right" ? "rounded-r-2xl" : "rounded-2xl";
   const spineShadow =
@@ -57,12 +34,12 @@ function Page({ p, side }: { p: (typeof pages)[number] | null; side: "left" | "r
   return (
     <div className={`relative flex flex-col bg-white overflow-hidden ${round}`}>
       <div className={`pointer-events-none absolute inset-y-0 w-6 z-10 ${spineShadow}`} />
-      <img src={p.img} alt={`ページ${p.n}のイラスト`} className="w-full aspect-[3/2] object-cover" draggable={false} />
+      <img src={p.image_url} alt={`ページ${p.page_number}のイラスト`} className="w-full aspect-[3/2] object-cover" draggable={false} />
       <div className="p-5 md:p-7 h-40 md:h-44 flex flex-col">
         <p className="text-base md:text-lg leading-loose flex-1 overflow-hidden" style={{ fontFamily: "var(--font-display)" }}>
           {p.text}
         </p>
-        <div className="mt-2 text-xs text-[color:var(--muted-foreground)] text-right">— {p.n} —</div>
+        <div className="mt-2 text-xs text-[color:var(--muted-foreground)] text-right">— {p.page_number} —</div>
       </div>
     </div>
   );
@@ -75,18 +52,33 @@ function PreviewPage() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const per = isMobile ? 1 : 2;
-  const total = pages.length;
 
+  // 絵本データはAPI経由で取得（今はモック。WEEK6: Supabase booksテーブルに差し替え）
+  const [title, setTitle] = useState("");
+  const [pages, setPages] = useState<BookPage[]>([]);
   const [index, setIndex] = useState(0);
   const [flip, setFlip] = useState<Flip | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const drag = useRef<{ x: number } | null>(null);
 
   useEffect(() => {
+    let alive = true;
+    getBook(id).then((b) => {
+      if (!alive) return;
+      setTitle(b.title);
+      setPages(b.pages);
+    });
+    return () => { alive = false; };
+  }, [id]);
+
+  const total = pages.length;
+  const P = (i: number) => (i >= 0 && i < pages.length ? pages[i] : null);
+
+  useEffect(() => {
     setIndex((i) => Math.floor(i / per) * per);
   }, [per]);
 
-  const lastIndex = (Math.ceil(total / per) - 1) * per;
+  const lastIndex = Math.max(0, (Math.ceil(total / per) - 1) * per);
   const atStart = index === 0;
   const atEnd = index >= lastIndex;
 
@@ -266,7 +258,7 @@ function PreviewPage() {
       <header className="sticky top-0 z-40 backdrop-blur bg-[color:var(--cream)]/80 border-b border-[color:var(--border)]">
         <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">
           <button onClick={() => router.history.back()} className="h-9 w-9 shrink-0 rounded-full border border-[color:var(--border)] bg-white flex items-center justify-center text-[color:var(--muted-foreground)]" aria-label="戻る">←</button>
-          <div className="font-bold truncate text-center" style={{ fontFamily: "var(--font-display)" }}>{TITLE}</div>
+          <div className="font-bold truncate text-center" style={{ fontFamily: "var(--font-display)" }}>{title || "読み込み中…"}</div>
           <button onClick={() => setToast("共有リンクをコピーしました")} className="h-9 w-9 shrink-0 rounded-full border border-[color:var(--border)] bg-white flex items-center justify-center text-[color:var(--muted-foreground)]" aria-label="共有">🔗</button>
         </div>
       </header>

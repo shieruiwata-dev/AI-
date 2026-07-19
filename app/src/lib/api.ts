@@ -143,12 +143,13 @@ export function generateStory(
   onProgress?: (p: GenerateProgress) => void,
   signal?: AbortSignal,
 ): Promise<GenerateStoryResponse> {
-  // --- MOCK: 疑似進捗（各ステージ20〜30秒・不均等に増加） ---
+  // --- MOCK: 疑似進捗（テスト用に短め・合計約5秒。本番の所要時間はWeek 5の
+  //     Dify接続後に実際のストリーミングで決まるため、ここの数値は開発用） ---
   const STAGES: { to: number; stage: GenerateProgress["stage"]; ms: number }[] = [
-    { to: 20, stage: "imagining", ms: 22000 },
-    { to: 50, stage: "story_generation", ms: 26000 },
-    { to: 90, stage: "image_generation", ms: 28000 },
-    { to: 100, stage: "finalize", ms: 22000 },
+    { to: 20, stage: "imagining", ms: 1200 },
+    { to: 50, stage: "story_generation", ms: 1500 },
+    { to: 90, stage: "image_generation", ms: 1500 },
+    { to: 100, stage: "finalize", ms: 1000 },
   ];
   const TICK = 120;
   return new Promise((resolve, reject) => {

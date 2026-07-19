@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { BookCover } from "@/components/BookCover";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -67,21 +68,6 @@ const coverColumns = Array.from({ length: 6 }, (_, c) =>
   Array.from({ length: 4 }, (_, r) => coverPool[(c * 5 + r * 3 + c) % coverPool.length]),
 );
 const colSpeeds = ["30s", "38s", "26s", "34s", "29s", "42s"];
-
-// A little picture-book cover: spine, big art, and a title-bar skeleton.
-function BookCover({ emoji, tone, size = "text-4xl md:text-5xl" }: { emoji: string; tone: string; size?: string }) {
-  return (
-    <div className={`relative aspect-[3/4] rounded-xl shadow-md bg-gradient-to-br ${tone} overflow-hidden`}>
-      <div className="absolute inset-y-0 left-0 w-1.5 bg-white/60" />
-      <div className="absolute inset-y-0 left-1.5 w-px bg-black/10" />
-      <div className={`absolute inset-0 flex items-center justify-center ${size} drop-shadow-sm`}>{emoji}</div>
-      <div className="absolute left-4 right-4 bottom-3 space-y-1.5">
-        <div className="h-1.5 rounded-full bg-white/80 w-3/4" />
-        <div className="h-1 rounded-full bg-white/55 w-1/2" />
-      </div>
-    </div>
-  );
-}
 
 // Small English kicker above section headings (checkout.com-style rhythm).
 function Kicker({ children }: { children: string }) {

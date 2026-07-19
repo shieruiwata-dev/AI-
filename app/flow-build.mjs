@@ -357,16 +357,35 @@ ${css}
         else { baseL=index-1; baseR=index-1; frontIdx=index; backIdx=index-1; }
         leafCss = "inset:0;transform-origin:"+(dir>0?"left":"right")+" center;"; frontSide="single"; backSide="single";
       }
+      // Paper-curl: dark rim + white highlight at the free edge, plus a light
+      // band sweeping across each face while the leaf turns.
+      var freeEdge = dir>0 ? "right" : "left";
+      function curlCss(edge){
+        return "background:linear-gradient(to "+(edge==="right"?"left":"right")+", rgba(0,0,0,0.20) 0%, rgba(255,255,255,0.30) 6%, rgba(255,255,255,0) 22%);";
+      }
+      var sheenBase = "background-image:linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.45) 50%, transparent 65%);background-size:250% 100%;background-repeat:no-repeat;";
+      var sheenFrom = dir>0 ? "130% 0" : "-30% 0";
+      var sheenTo   = dir>0 ? "-30% 0" : "130% 0";
       stage.innerHTML = spreadHTML(baseL, baseR)
+        + '<div class="pointer-events-none absolute inset-0 bg-black rounded-2xl" style="opacity:0;animation:ds-flip-cast '+DUR+'ms '+EASE+' both"></div>'
         + '<div id="pvLeaf" class="absolute" style="transform-style:preserve-3d;'+leafCss+'transform:rotateY(0deg);will-change:transform;">'
-        + '<div class="absolute inset-0" style="backface-visibility:hidden">'+pageHTML(frontIdx,frontSide)+'<div id="pvShF" class="pointer-events-none absolute inset-0 bg-black" style="opacity:0"></div></div>'
-        + '<div class="absolute inset-0" style="backface-visibility:hidden;transform:rotateY(180deg)">'+pageHTML(backIdx,backSide)+'<div id="pvShB" class="pointer-events-none absolute inset-0 bg-black" style="opacity:0.28"></div></div>'
+        + '<div class="absolute inset-0" style="backface-visibility:hidden">'+pageHTML(frontIdx,frontSide)
+        +   '<div class="pointer-events-none absolute inset-0" style="'+curlCss(freeEdge)+'"></div>'
+        +   '<div id="pvSheenF" class="pointer-events-none absolute inset-0" style="'+sheenBase+'background-position:'+sheenFrom+';"></div>'
+        +   '<div id="pvShF" class="pointer-events-none absolute inset-0 bg-black" style="opacity:0"></div></div>'
+        + '<div class="absolute inset-0" style="backface-visibility:hidden;transform:rotateY(180deg)">'+pageHTML(backIdx,backSide)
+        +   '<div class="pointer-events-none absolute inset-0" style="'+curlCss(freeEdge==="right"?"left":"right")+'"></div>'
+        +   '<div id="pvSheenB" class="pointer-events-none absolute inset-0" style="'+sheenBase+'background-position:'+sheenFrom+';"></div>'
+        +   '<div id="pvShB" class="pointer-events-none absolute inset-0 bg-black" style="opacity:0.28"></div></div>'
         + '</div>';
       var leaf = document.getElementById("pvLeaf"), shF = document.getElementById("pvShF"), shB = document.getElementById("pvShB");
+      var snF = document.getElementById("pvSheenF"), snB = document.getElementById("pvSheenB");
       requestAnimationFrame(function(){ requestAnimationFrame(function(){
         leaf.style.transition = "transform "+DUR+"ms "+EASE; leaf.style.transform = "rotateY("+end+"deg)";
         shF.style.transition = "opacity "+DUR+"ms "+EASE; shF.style.opacity = "0.28";
         shB.style.transition = "opacity "+DUR+"ms "+EASE; shB.style.opacity = "0";
+        snF.style.transition = "background-position "+DUR+"ms "+EASE; snF.style.backgroundPosition = sheenTo;
+        snB.style.transition = "background-position "+DUR+"ms "+EASE; snB.style.backgroundPosition = sheenTo;
       }); });
       setTimeout(function(){
         index = dir>0 ? Math.min(index+p, lastIndex) : Math.max(index-p, 0);

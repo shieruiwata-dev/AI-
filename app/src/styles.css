@@ -175,6 +175,11 @@
   30% { transform: rotate(-6deg) scale(1.08); }
   60% { transform: rotate(5deg) scale(1.06); }
 }
+/* Ambient shadow cast on the book while a leaf is mid-air during a page flip */
+@keyframes ds-flip-cast {
+  0%, 100% { opacity: 0; }
+  45%, 60% { opacity: 0.12; }
+}
 
 .ds-vup { animation: ds-vscroll-up var(--vspeed, 32s) linear infinite; }
 .ds-vdown { animation: ds-vscroll-down var(--vspeed, 32s) linear infinite; }

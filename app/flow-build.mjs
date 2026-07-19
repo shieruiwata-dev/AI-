@@ -293,16 +293,17 @@ ${css}
     function pageHTML(i, side){
       var round = side==="left" ? "rounded-l-2xl" : side==="right" ? "rounded-r-2xl" : "rounded-2xl";
       var spine = side==="left" ? "bg-gradient-to-l from-black/12 to-transparent right-0" : side==="right" ? "bg-gradient-to-r from-black/12 to-transparent left-0" : "hidden";
-      if(i<0 || i>=total) return '<div class="h-full bg-[color:var(--cream)] '+round+'"></div>';
+      // Fixed geometry so the book never resizes with text length.
+      if(i<0 || i>=total) return '<div class="flex flex-col bg-[color:var(--cream)] overflow-hidden '+round+'"><div class="w-full aspect-[3/2]"></div><div class="h-40 md:h-44"></div></div>';
       var n = i+1;
-      return '<div class="relative h-full flex flex-col bg-white overflow-hidden '+round+'">'
+      return '<div class="relative flex flex-col bg-white overflow-hidden '+round+'">'
         + '<div class="pointer-events-none absolute inset-y-0 w-6 z-10 '+spine+'"></div>'
         + '<img src="'+pvPlaceholder(n)+'" alt="ページ'+n+'のイラスト" class="w-full aspect-[3/2] object-cover" draggable="false" />'
-        + '<div class="p-5 md:p-7 flex-1"><p class="text-base md:text-lg leading-loose" style="font-family:var(--font-display)">'+esc(PV_TEXTS[i])+'</p><div class="mt-4 text-xs text-[color:var(--muted-foreground)] text-right">— '+n+' —</div></div></div>';
+        + '<div class="p-5 md:p-7 h-40 md:h-44 flex flex-col"><p class="text-base md:text-lg leading-loose flex-1 overflow-hidden" style="font-family:var(--font-display)">'+esc(PV_TEXTS[i])+'</p><div class="mt-2 text-xs text-[color:var(--muted-foreground)] text-right">— '+n+' —</div></div></div>';
     }
     function spreadHTML(l, r){
-      if(per()===1) return '<div class="h-full">'+pageHTML(l,"single")+'</div>';
-      return '<div class="flex items-stretch h-full"><div class="w-1/2">'+pageHTML(l,"left")+'</div><div class="w-1/2">'+pageHTML(r,"right")+'</div></div>';
+      if(per()===1) return pageHTML(l,"single");
+      return '<div class="flex"><div class="w-1/2">'+pageHTML(l,"left")+'</div><div class="w-1/2">'+pageHTML(r,"right")+'</div></div>';
     }
     function showStatic(){ persp.style.maxWidth = stageMax()+"px"; stage.innerHTML = spreadHTML(index, index+1); }
 

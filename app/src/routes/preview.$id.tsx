@@ -45,16 +45,24 @@ function Page({ p, side }: { p: (typeof pages)[number] | null; side: "left" | "r
       : side === "right"
         ? "bg-gradient-to-r from-black/12 to-transparent left-0"
         : "hidden";
-  if (!p) return <div className={`h-full bg-[color:var(--cream)] ${round}`} />;
+  // Fixed geometry so the book never resizes with text length: image keeps a
+  // constant aspect and the text area has a constant height with room to spare.
+  if (!p)
+    return (
+      <div className={`flex flex-col bg-[color:var(--cream)] overflow-hidden ${round}`}>
+        <div className="w-full aspect-[3/2]" />
+        <div className="h-40 md:h-44" />
+      </div>
+    );
   return (
-    <div className={`relative h-full flex flex-col bg-white overflow-hidden ${round}`}>
+    <div className={`relative flex flex-col bg-white overflow-hidden ${round}`}>
       <div className={`pointer-events-none absolute inset-y-0 w-6 z-10 ${spineShadow}`} />
       <img src={p.img} alt={`ページ${p.n}のイラスト`} className="w-full aspect-[3/2] object-cover" draggable={false} />
-      <div className="p-5 md:p-7 flex-1">
-        <p className="text-base md:text-lg leading-loose" style={{ fontFamily: "var(--font-display)" }}>
+      <div className="p-5 md:p-7 h-40 md:h-44 flex flex-col">
+        <p className="text-base md:text-lg leading-loose flex-1 overflow-hidden" style={{ fontFamily: "var(--font-display)" }}>
           {p.text}
         </p>
-        <div className="mt-4 text-xs text-[color:var(--muted-foreground)] text-right">— {p.n} —</div>
+        <div className="mt-2 text-xs text-[color:var(--muted-foreground)] text-right">— {p.n} —</div>
       </div>
     </div>
   );
@@ -141,11 +149,9 @@ function PreviewPage() {
   // ----- Book area -----
   const renderStatic = () =>
     per === 1 ? (
-      <div className="h-full">
-        <Page p={P(index)} side="single" />
-      </div>
+      <Page p={P(index)} side="single" />
     ) : (
-      <div className="flex items-stretch h-full">
+      <div className="flex">
         <div className="w-1/2">
           <Page p={P(index)} side="left" />
         </div>
@@ -196,9 +202,9 @@ function PreviewPage() {
 
     const Base = () =>
       per === 1 ? (
-        <div className="h-full"><Page p={P(baseLeft)} side="single" /></div>
+        <Page p={P(baseLeft)} side="single" />
       ) : (
-        <div className="flex items-stretch h-full">
+        <div className="flex">
           <div className="w-1/2"><Page p={P(baseLeft)} side="left" /></div>
           <div className="w-1/2"><Page p={P(baseRight)} side="right" /></div>
         </div>

@@ -1,0 +1,438 @@
+<title>DreamStories ワイヤーフレーム（6画面）</title>
+<style>
+  :root {
+    --coral: #FF9AA2;
+    --coral-deep: #F27C86;
+    --blue: #A8D8EA;
+    --blue-deep: #7FBEDB;
+    --butter: #FFE5A0;
+    --cream: #FFF8F0;
+    --ink: #333333;
+    --muted: #8a8079;
+    --line: #ece3d8;
+    --gallery: #efe7e3;
+    --gallery-ink: #4a413c;
+    --radius: 12px;
+    --font: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP",
+            "Yu Gothic", Meiryo, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    color: var(--gallery-ink);
+    background: var(--gallery);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+  }
+
+  /* ---------- gallery shell ---------- */
+  .page-head {
+    text-align: center;
+    padding: 40px 20px 8px;
+  }
+  .page-head .kicker {
+    font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--coral-deep); font-weight: 700;
+  }
+  .page-head h1 { font-size: 26px; margin: 6px 0 4px; color: var(--gallery-ink); }
+  .page-head p { font-size: 13px; color: #8b807a; }
+
+  .gallery {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 44px; padding: 32px 16px 72px;
+  }
+  .frame-block { width: 375px; max-width: 100%; }
+  .frame-label {
+    display: flex; align-items: baseline; gap: 10px; margin: 0 6px 12px;
+  }
+  .frame-label .num {
+    font-size: 12px; font-weight: 800; color: #fff; background: var(--coral);
+    width: 22px; height: 22px; border-radius: 50%;
+    display: grid; place-items: center; flex: none;
+  }
+  .frame-label .t { font-size: 15px; font-weight: 700; color: var(--gallery-ink); }
+  .frame-label .s { font-size: 12px; color: #9a8f88; }
+
+  /* phone frame */
+  .phone {
+    width: 375px; max-width: 100%; height: 720px;
+    background: var(--cream);
+    border-radius: 30px;
+    border: 9px solid #2b2622;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 18px 40px rgba(70,50,45,.18);
+    display: flex; flex-direction: column;
+    color: var(--ink);
+  }
+  .phone .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 128px; height: 22px; background: #2b2622;
+    border-radius: 0 0 14px 14px; z-index: 30;
+  }
+  .screen { flex: 1; overflow-y: auto; position: relative; }
+  .screen::-webkit-scrollbar { width: 0; }
+
+  /* shared app bits */
+  .appbar {
+    height: 52px; flex: none; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 16px;
+    background: var(--cream); border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .logo { font-weight: 800; color: var(--coral-deep); font-size: 16px; letter-spacing: .01em; }
+  .logo .moon { margin-right: 3px; }
+  .navlink { font-size: 12px; color: var(--muted); }
+  .iconbtn {
+    width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--line);
+    background: #fff; display: grid; place-items: center; font-size: 14px; color: var(--muted);
+  }
+
+  .pad { padding: 18px 16px; }
+  h2.screen-h { font-size: 20px; line-height: 1.4; color: var(--ink); }
+  .sub { font-size: 12.5px; color: var(--muted); }
+
+  .btn {
+    display: block; width: 100%; text-align: center;
+    padding: 15px 16px; border-radius: var(--radius); border: none;
+    font-family: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+  }
+  .btn-primary { background: var(--coral); color: #fff; box-shadow: 0 6px 14px rgba(242,124,134,.35); }
+  .btn-blue { background: var(--blue); color: #1f5066; }
+  .btn-ghost { background: #fff; color: var(--muted); border: 1px solid var(--line); box-shadow: none; }
+
+  .placeholder {
+    background: repeating-linear-gradient(45deg, #f3ebe0, #f3ebe0 8px, #efe6d9 8px, #efe6d9 16px);
+    border-radius: 10px; display: grid; place-items: center;
+    color: #b6a892; font-size: 12px;
+  }
+
+  /* 1. landing */
+  .hero { padding: 26px 18px 20px; text-align: center; background:
+      radial-gradient(120% 90% at 50% 0%, #fff4ef 0%, var(--cream) 70%); }
+  .hero .badge {
+    display: inline-block; font-size: 11px; font-weight: 700; color: var(--coral-deep);
+    background: #fff; border: 1px solid var(--coral); border-radius: 999px; padding: 4px 12px; margin-bottom: 14px;
+  }
+  .hero h2 { font-size: 23px; line-height: 1.45; color: var(--ink); }
+  .hero .coral { color: var(--coral-deep); }
+  .hero-art { height: 132px; margin: 16px 0 18px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--blue) 0%, #cfeaf3 55%, var(--butter) 100%);
+    display: grid; place-items: center; font-size: 40px; }
+  .features { display: flex; flex-direction: column; gap: 10px; padding: 4px 16px 20px; }
+  .feat { display: flex; gap: 12px; align-items: center; background: #fff;
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+  .feat .ic { width: 40px; height: 40px; border-radius: 10px; flex: none;
+    display: grid; place-items: center; font-size: 20px; background: #fff4ef; }
+  .feat b { font-size: 13.5px; color: var(--ink); }
+  .feat span { font-size: 11.5px; color: var(--muted); display: block; }
+  .footer { padding: 16px; text-align: center; font-size: 11px; color: #b3a89f;
+    border-top: 1px solid var(--line); background: #fdf5ec; }
+
+  /* 2. chat */
+  .chatwrap { padding: 14px 14px 8px; display: flex; flex-direction: column; gap: 10px; }
+  .steps { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); padding: 2px 2px 6px; }
+  .stepbar { flex: 1; height: 6px; background: #eee2d5; border-radius: 6px; overflow: hidden; }
+  .stepbar i { display: block; height: 100%; width: 50%; background: var(--coral); }
+  .bubble { max-width: 78%; padding: 10px 13px; font-size: 13px; border-radius: 14px; line-height: 1.5; }
+  .b-ai { align-self: flex-start; background: #ffe9ea; color: #6d4247; border-bottom-left-radius: 4px; }
+  .b-user { align-self: flex-end; background: var(--blue); color: #1f5066; border-bottom-right-radius: 4px; }
+  .b-typing { align-self: flex-start; background: #ffe9ea; color: var(--coral-deep); letter-spacing: 3px; }
+  .themebtns { display: flex; flex-wrap: wrap; gap: 8px; align-self: flex-start; max-width: 92%; }
+  .chip { font-size: 12px; padding: 8px 12px; border-radius: 999px; background: #fff;
+    border: 1.5px solid var(--coral); color: var(--coral-deep); font-weight: 600; }
+  .chip.sel { background: var(--coral); color: #fff; }
+  .inputbar { margin-top: auto; flex: none; display: flex; gap: 8px; align-items: center;
+    padding: 10px 12px; border-top: 1px solid var(--line); background: #fff; }
+  .inputbar .field { flex: 1; height: 40px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--cream); display: flex; align-items: center; padding: 0 14px; font-size: 12.5px; color: #b3a89f; }
+  .send { width: 40px; height: 40px; border-radius: 50%; background: var(--coral); color: #fff;
+    display: grid; place-items: center; flex: none; font-size: 16px; }
+
+  /* 3. generating */
+  .gen { height: 100%; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 22px; padding: 24px; text-align: center; position: relative; overflow: hidden; }
+  .gen .spark { position: absolute; font-size: 15px; opacity: .5; }
+  .ring { width: 180px; height: 180px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(var(--coral) 0% 62%, #f1e6da 62% 100%); }
+  .ring .inner { width: 142px; height: 142px; border-radius: 50%; background: var(--cream);
+    display: grid; place-items: center; flex-direction: column; }
+  .ring .pct { font-size: 40px; font-weight: 800; color: var(--coral-deep); line-height: 1; }
+  .ring .pl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .gen .status { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .gen .statsub { font-size: 12px; color: var(--muted); }
+  .stagelist { display: flex; gap: 6px; margin-top: 4px; }
+  .stagelist i { width: 8px; height: 8px; border-radius: 50%; background: #e4d8ca; }
+  .stagelist i.on { background: var(--coral); }
+
+  /* 4. preview */
+  .book { padding: 14px; }
+  .booktitle { text-align: center; font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+  .spread { position: relative; }
+  .bookpage { background: #fffdf9; border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(120,90,70,.12); overflow: hidden; }
+  .bookpage .illus { height: 210px; background: linear-gradient(160deg, #d5edf5, #ffe9ea 80%);
+    display: grid; place-items: center; font-size: 52px; }
+  .bookpage .txt { padding: 16px 18px; font-size: 14px; line-height: 1.9; color: var(--ink);
+    font-family: "Hiragino Mincho ProN", "Noto Serif JP", serif; }
+  .navrow { display: flex; align-items: center; justify-content: space-between; margin: 14px 4px 10px; }
+  .arrow { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line);
+    background: #fff; display: grid; place-items: center; font-size: 18px; color: var(--coral-deep); }
+  .arrow.off { color: #d8ccbf; }
+  .dots { display: flex; gap: 6px; align-items: center; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: #e0d4c5; }
+  .dots i.on { background: var(--coral); width: 9px; height: 9px; }
+  .pagenum { font-size: 11px; color: var(--muted); }
+
+  /* 5. purchase */
+  .buycard { background: #fff; border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px; margin-bottom: 14px; }
+  .cover { height: 150px; border-radius: 10px; background: linear-gradient(160deg, var(--blue), var(--butter));
+    display: grid; place-items: center; font-size: 44px; margin-bottom: 14px; }
+  .price { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 2px; }
+  .price .n { font-size: 30px; font-weight: 800; color: var(--ink); }
+  .price .u { font-size: 14px; color: var(--muted); }
+  .price .tag { margin-left: auto; font-size: 10px; font-weight: 700; color: #7a5a00;
+    background: var(--butter); border-radius: 6px; padding: 3px 8px; }
+  .rows { border-top: 1px dashed var(--line); margin-top: 12px; padding-top: 12px;
+    display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; }
+  .rows .r { display: flex; justify-content: space-between; color: var(--muted); }
+  .rows .r b { color: var(--ink); font-weight: 600; }
+  .secure { display: flex; align-items: center; gap: 6px; justify-content: center;
+    font-size: 11px; color: var(--muted); margin-top: 12px; }
+
+  /* 6. mypage */
+  .libhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .plus { font-size: 12px; font-weight: 700; color: #fff; background: var(--coral);
+    border-radius: 999px; padding: 8px 12px; flex: none; box-shadow: 0 4px 10px rgba(242,124,134,.3); }
+  .tabs { display: flex; gap: 8px; margin: 14px 0 12px; }
+  .tab { font-size: 12px; padding: 6px 14px; border-radius: 999px; background: #fff;
+    border: 1px solid var(--line); color: var(--muted); }
+  .tab.on { background: #fff4ef; border-color: var(--coral); color: var(--coral-deep); font-weight: 700; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .card .cv { height: 92px; display: grid; place-items: center; font-size: 30px; }
+  .card .meta { padding: 8px 10px; }
+  .card .bt { font-size: 12px; font-weight: 700; color: var(--ink); line-height: 1.4; }
+  .card .bm { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+  .badge2 { display: inline-block; font-size: 9.5px; font-weight: 700; border-radius: 5px; padding: 2px 7px; margin-top: 6px; }
+  .badge2.paid { background: var(--coral); color: #fff; }
+  .badge2.free { background: #eee2d5; color: #8a7d6e; }
+
+  @media (max-width: 430px) {
+    .frame-block, .phone { width: 100%; }
+    .phone { height: 700px; }
+  }
+</style>
+
+<div class="page-head">
+  <div class="kicker">DreamStories · 日本版</div>
+  <h1>🌙 6画面ワイヤーフレーム</h1>
+  <p>モバイル 375px ／ コーラルピンク #FF9AA2 ・ ソフトブルー #A8D8EA</p>
+</div>
+
+<div class="gallery">
+
+  <!-- 1. Landing -->
+  <div class="frame-block">
+    <div class="frame-label"><span class="num">1</span><span class="t">ランディングページ</span><span class="s">/ </span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="appbar">
+          <div class="logo"><span class="moon">🌙</span>DreamStories</div>
+          <div class="navlink">マイページ</div>
+        </div>
+        <div class="hero">
+          <span class="badge">✨ AIがつくる、世界に1冊の絵本</span>
+          <h2>あなたのお子さまが<br><span class="coral">主人公</span>の絵本</h2>
+          <div class="hero-art">📖</div>
+          <button class="btn btn-primary">絵本を作る</button>
+        </div>
+        <div class="features">
+          <div class="feat"><div class="ic">🤖</div><div><b>AIが作る</b><span>名前と興味からお話を自動生成</span></div></div>
+          <div class="feat"><div class="ic">📚</div><div><b>全12ページ</b><span>読み応えのあるボリューム</span></div></div>
+          <div class="feat"><div class="ic">🎨</div><div><b>かわいいイラスト</b><span>ページごとにやさしい絵</span></div></div>
+        </div>
+        <div class="footer">会社概要 ・ 利用規約 ・ お問い合わせ<br>© 2026 DreamStories Japan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Onboard chat -->
+  <div class="frame-block">
+    <div class="frame-label"><span class="num">2</span><span class="t">オンボードチャット</span><span class="s">/create</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen" style="display:flex;flex-direction:column;">
+        <div class="appbar">
+          <div class="iconbtn">‹</div>
+          <div class="logo" style="font-size:15px;">🌙DreamStories</div>
+          <div style="width:30px;"></div>
+        </div>
+        <div class="chatwrap">
+          <div class="steps"><span>ステップ 2/4</span><span class="stepbar"><i></i></span></div>
+          <div class="bubble b-ai">DreamStoriesへようこそ！まず、お子さまのお名前を教えてください。</div>
+          <div class="bubble b-user">太郎</div>
+          <div class="bubble b-ai">太郎ちゃんですね！おいくつですか？</div>
+          <div class="bubble b-user">5さい</div>
+          <div class="bubble b-ai">太郎ちゃんは5歳ですね。以下のテーマから選んでいただけますか？</div>
+          <div class="themebtns">
+            <span class="chip sel">🚀 宇宙冒険</span>
+            <span class="chip">🦖 恐竜の世界</span>
+            <span class="chip">🐟 海の探検</span>
+            <span class="chip">🌲 魔法の森</span>
+          </div>
+          <div class="bubble b-typing">● ● ●</div>
+        </div>
+        <div class="inputbar">
+          <div class="field">メッセージを入力…</div>
+          <div class="send">➤</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Generating -->
+  <div class="frame-block">
+    <div class="frame-label"><span class="num">3</span><span class="t">生成中画面</span><span class="s">/generating</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="gen">
+          <span class="spark" style="top:12%;left:16%;">⭐</span>
+          <span class="spark" style="top:20%;right:18%;">💗</span>
+          <span class="spark" style="bottom:24%;left:20%;">✨</span>
+          <span class="spark" style="bottom:16%;right:22%;">⭐</span>
+          <div class="ring">
+            <div class="inner" style="display:grid;">
+              <div class="pct">62%</div>
+              <div class="pl">生成中…</div>
+            </div>
+          </div>
+          <div>
+            <div class="status">イラストを描いています…</div>
+            <div class="statsub">太郎ちゃんの宇宙冒険をお絵かき中</div>
+          </div>
+          <div class="stagelist"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+          <div class="sub" style="max-width:220px;">絵本の完成まで、あと2〜3分ほどお待ちください🌙</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Preview -->
+  <div class="frame-block">
+    <div class="frame-label"><span class="num">4</span><span class="t">プレビュー（ページめくり）</span><span class="s">/preview/[id]</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen" style="display:flex;flex-direction:column;">
+        <div class="appbar">
+          <div class="iconbtn">‹</div>
+          <div class="logo" style="font-size:14px;color:var(--ink);">太郎の宇宙大冒険</div>
+          <div class="iconbtn">↗</div>
+        </div>
+        <div class="book">
+          <div class="spread">
+            <div class="bookpage">
+              <div class="illus">🚀</div>
+              <div class="txt">むかしむかし、たろうくんは ぴかぴか光る ロケットに のって、ほしぞらへ とびだしました。</div>
+            </div>
+          </div>
+          <div class="navrow">
+            <div class="arrow">‹</div>
+            <div style="text-align:center;">
+              <div class="dots"><i></i><i></i><i class="on"></i><i></i><i></i><i></i></div>
+              <div class="pagenum" style="margin-top:6px;">3 / 12</div>
+            </div>
+            <div class="arrow">›</div>
+          </div>
+        </div>
+        <div class="pad" style="margin-top:auto;padding-top:0;">
+          <button class="btn btn-primary">この絵本を購入する（5,000円）</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Purchase -->
+  <div class="frame-block">
+    <div class="frame-label"><span class="num">5</span><span class="t">購入画面</span><span class="s">/checkout</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="appbar">
+          <div class="iconbtn">‹</div>
+          <div class="logo" style="font-size:15px;">🌙DreamStories</div>
+          <div style="width:30px;"></div>
+        </div>
+        <div class="pad">
+          <h2 class="screen-h">ご購入内容の確認</h2>
+          <p class="sub" style="margin:2px 0 16px;">お支払い前に内容をご確認ください</p>
+          <div class="buycard">
+            <div class="cover">🚀</div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);">太郎の宇宙大冒険</div>
+            <div class="sub">主人公：太郎ちゃん ／ 全12ページ</div>
+            <div class="price"><span class="n">5,000</span><span class="u">円（税込）</span><span class="tag">デジタル絵本</span></div>
+            <div class="rows">
+              <div class="r"><span>商品</span><b>絵本1冊（PDF・オンライン閲覧）</b></div>
+              <div class="r"><span>小計</span><b>5,000円</b></div>
+              <div class="r"><span>合計</span><b style="color:var(--coral-deep);">5,000円</b></div>
+            </div>
+          </div>
+          <button class="btn btn-primary">💳 決済に進む</button>
+          <div style="height:10px;"></div>
+          <button class="btn btn-ghost">キャンセル</button>
+          <div class="secure">🔒 Stripeによる安全な決済</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. My page -->
+  <div class="frame-block">
+    <div class="frame-label"><span class="num">6</span><span class="t">マイページ（マイライブラリ）</span><span class="s">/mypage</span></div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="appbar">
+          <div class="logo">🌙DreamStories</div>
+          <div class="navlink">ログアウト</div>
+        </div>
+        <div class="pad">
+          <div class="libhead">
+            <div>
+              <h2 class="screen-h">マイライブラリ</h2>
+              <p class="sub">あなたが作った絵本たち</p>
+            </div>
+            <div class="plus">＋ 新しい絵本</div>
+          </div>
+          <div class="tabs">
+            <span class="tab on">すべて</span>
+            <span class="tab">購入済み</span>
+            <span class="tab">未購入</span>
+          </div>
+          <div class="grid">
+            <div class="card">
+              <div class="cv" style="background:linear-gradient(160deg,#d5edf5,#ffe9ea);">🚀</div>
+              <div class="meta"><div class="bt">太郎の宇宙大冒険</div><div class="bm">太郎ちゃん ・ 7/19</div><span class="badge2 paid">購入済み</span></div>
+            </div>
+            <div class="card">
+              <div class="cv" style="background:linear-gradient(160deg,#ffe9ea,#ffe5a0);">🦖</div>
+              <div class="meta"><div class="bt">花子の恐竜たんけん</div><div class="bm">花子ちゃん ・ 7/18</div><span class="badge2 free">未購入</span></div>
+            </div>
+            <div class="card">
+              <div class="cv" style="background:linear-gradient(160deg,#cfeaf3,#a8d8ea);">🐟</div>
+              <div class="meta"><div class="bt">みなとの海の探検</div><div class="bm">みなとちゃん ・ 7/15</div><span class="badge2 paid">購入済み</span></div>
+            </div>
+            <div class="card">
+              <div class="cv" style="background:linear-gradient(160deg,#e7f3d5,#ffe5a0);">🌲</div>
+              <div class="meta"><div class="bt">さくらの魔法の森</div><div class="bm">さくらちゃん ・ 7/12</div><span class="badge2 free">未購入</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

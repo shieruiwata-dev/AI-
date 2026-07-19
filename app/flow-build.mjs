@@ -409,6 +409,19 @@ ${css}
     if(path.indexOf("/mypage") === 0) return "mypage";
     return "landing";
   }
+  // Scroll-reveal for captured landing/mypage (their JS is stripped in the snapshot).
+  var revealIO = null;
+  function setupReveal(){
+    var els = document.querySelectorAll(".reveal:not(.is-in)");
+    if(!els.length) return;
+    if(!("IntersectionObserver" in window)){ els.forEach(function(e){ e.classList.add("is-in"); }); return; }
+    if(revealIO) revealIO.disconnect();
+    revealIO = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add("is-in"); revealIO.unobserve(en.target); } });
+    }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+    els.forEach(function(e){ revealIO.observe(e); });
+  }
+
   function render(){
     clearTimers();
     if(screenCleanup){ screenCleanup(); screenCleanup = null; }
@@ -421,6 +434,7 @@ ${css}
     else if(s === "preview"){ renderPreview(); }
     else if(s === "checkout"){ renderCheckout(); }
     window.scrollTo(0,0);
+    setupReveal();
   }
   function navigate(path){ if(("#"+path) !== location.hash){ location.hash = path; } else { render(); } }
 
@@ -440,7 +454,7 @@ ${css}
     navigate(normalize(el.getAttribute("data-href")));
   });
   window.addEventListener("hashchange", render);
-  if(!location.hash) location.hash = "/create"; else render();
+  if(!location.hash) location.hash = "/"; else render();
 })();
 </script>`;
 

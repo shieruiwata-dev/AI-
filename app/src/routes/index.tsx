@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
@@ -63,6 +63,8 @@ const samples = [
   { emoji: "🦖", title: "はなこと恐竜の森", tone: "from-[color:var(--butter)]/60 to-[color:var(--coral)]/40" },
   { emoji: "🐟", title: "みなとの海のたんけん", tone: "from-[color:var(--sky)]/60 to-[color:var(--coral)]/30" },
   { emoji: "🌸", title: "さくらの魔法の国", tone: "from-[color:var(--coral)]/30 to-[color:var(--butter)]/60" },
+  { emoji: "🎏", title: "けんとのお祭り物語", tone: "from-[color:var(--butter)]/50 to-[color:var(--sky)]/50" },
+  { emoji: "🐻", title: "ゆいと森のなかまたち", tone: "from-[color:var(--coral)]/30 to-[color:var(--sky)]/50" },
 ];
 
 const faqs = [
@@ -72,57 +74,92 @@ const faqs = [
   { q: "データの安全性は？", a: "お子さまの情報は絵本の生成のみに使用し、暗号化して安全に管理します。第三者に提供することはありません。" },
 ];
 
+// Reveal sections as they scroll into view (checkout.com-style entrance).
+function useReveal() {
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
+    if (typeof IntersectionObserver === "undefined") {
+      els.forEach((e) => e.classList.add("is-in"));
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-in");
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
+    );
+    els.forEach((e) => io.observe(e));
+    return () => io.disconnect();
+  }, []);
+}
+
+const rise = (delay: number) => ({ animationDelay: `${delay}ms`, animationFillMode: "both" as const });
+const RISE = "animate-in fade-in slide-in-from-bottom-4 duration-700";
+
 function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  useReveal();
 
   return (
     <div className="min-h-screen">
       <Header />
       <main>
         {/* ===== Hero ===== */}
-        <section className="bg-gradient-to-b from-[color:var(--cream)] to-[#FFECEE]">
-          <div className="mx-auto max-w-6xl px-4 py-14 md:py-20 grid items-center gap-10 md:grid-cols-2">
+        <section className="relative overflow-hidden bg-gradient-to-b from-[color:var(--cream)] to-[#FFECEE]">
+          {/* animated soft backdrop */}
+          <div className="pointer-events-none absolute inset-0 -z-0" aria-hidden="true">
+            <div className="ds-blob absolute -top-24 -left-16 h-72 w-72 rounded-full bg-[color:var(--coral)] opacity-20 blur-3xl" />
+            <div className="ds-blob absolute top-10 right-0 h-80 w-80 rounded-full bg-[color:var(--sky)] opacity-25 blur-3xl" style={{ animationDelay: "-6s" }} />
+            <div className="ds-blob absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-[color:var(--butter)] opacity-30 blur-3xl" style={{ animationDelay: "-12s" }} />
+          </div>
+
+          <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24 grid items-center gap-10 md:grid-cols-2">
             <div className="text-center md:text-left">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/80 border border-[color:var(--border)] px-4 py-1.5 text-xs font-semibold text-[color:var(--coral)] shadow-sm">
+              <span className={`inline-flex items-center gap-2 rounded-full bg-white/80 border border-[color:var(--border)] px-4 py-1.5 text-xs font-semibold text-[color:var(--coral)] shadow-sm ${RISE}`} style={rise(0)}>
                 🌸 AIパーソナライズ絵本
               </span>
-              <h1 className="mt-5" style={{ fontFamily: "var(--font-display)" }}>
-                <span className="block text-4xl md:text-6xl leading-tight tracking-tight">
+              <h1 className="mt-6" style={{ fontFamily: "var(--font-display)" }}>
+                <span className={`block text-4xl md:text-6xl leading-tight tracking-tight ${RISE}`} style={rise(90)}>
                   あなたのお子さまが
                 </span>
-                <span className="block mt-1 text-2xl md:text-3xl leading-snug text-[color:var(--coral)]">
+                <span className={`block mt-1 text-2xl md:text-3xl leading-snug text-[color:var(--coral)] ${RISE}`} style={rise(180)}>
                   主人公の絵本
                 </span>
               </h1>
-              <p className="mt-5 text-base md:text-lg text-[color:var(--muted-foreground)] max-w-md mx-auto md:mx-0">
+              <p className={`mt-5 text-base md:text-lg text-[color:var(--muted-foreground)] max-w-md mx-auto md:mx-0 ${RISE}`} style={rise(280)}>
                 AIが12ページの世界にひとつだけの絵本を、たった5分で。
               </p>
-              <div className="mt-8">
-                <Link
-                  to="/create"
-                  className="btn-primary text-lg !px-8 !py-4 shadow-[var(--shadow-soft)]"
-                >
-                  絵本を作る →
-                </Link>
+              <div className={RISE} style={rise(380)}>
+                <div className="mt-8">
+                  <Link to="/create" className="btn-primary text-lg !px-8 !py-4 shadow-[var(--shadow-soft)] hover:shadow-lg">
+                    絵本を作る →
+                  </Link>
+                </div>
+                <p className="mt-3 text-xs text-[color:var(--muted-foreground)]">🎁 クレジットカード不要でお試し</p>
               </div>
             </div>
 
-            <div>
+            <div className={`${RISE}`} style={rise(240)}>
               <img
                 src={heroArt}
                 alt="家族で絵本を読む様子"
-                className="w-full max-w-md mx-auto rounded-3xl shadow-[var(--shadow-soft)]"
+                className="ds-float w-full max-w-md mx-auto rounded-3xl shadow-[var(--shadow-soft)]"
               />
             </div>
           </div>
         </section>
 
         {/* ===== Features ===== */}
-        <section className="mx-auto max-w-6xl px-4 py-16">
+        <section className="mx-auto max-w-6xl px-4 py-16 reveal">
           <h2 className="text-2xl md:text-3xl text-center">なぜDreamStoriesが選ばれるのか</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {features.map((f) => (
-              <div key={f.title} className="card-soft text-center transition-transform hover:-translate-y-1">
+              <div key={f.title} className="card-soft text-center transition-transform duration-300 hover:-translate-y-1.5 hover:shadow-lg">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--butter)] text-3xl">
                   {f.icon}
                 </div>
@@ -135,7 +172,7 @@ function LandingPage() {
 
         {/* ===== How it works ===== */}
         <section className="bg-white/50 border-y border-[color:var(--border)]">
-          <div className="mx-auto max-w-6xl px-4 py-16">
+          <div className="mx-auto max-w-6xl px-4 py-16 reveal">
             <h2 className="text-2xl md:text-3xl text-center">3ステップで完成</h2>
             <div className="mt-10 grid gap-8 md:grid-cols-3">
               {steps.map((s, i) => (
@@ -157,23 +194,28 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* ===== Sample gallery ===== */}
-        <section className="mx-auto max-w-6xl px-4 py-16">
+        {/* ===== Sample gallery (auto-scrolling marquee) ===== */}
+        <section className="mx-auto max-w-6xl px-4 py-16 reveal">
           <h2 className="text-2xl md:text-3xl text-center">実際に生成された絵本</h2>
-          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-            {samples.map((s) => (
-              <div key={s.title} className="card-soft !p-3">
-                <div className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${s.tone} flex items-center justify-center text-5xl`}>
-                  {s.emoji}
+          <p className="mt-2 text-center text-sm text-[color:var(--muted-foreground)]">世界にひとつの絵本たち</p>
+          <div className="mt-10 relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]">
+            <div className="ds-marquee flex w-max gap-4">
+              {[...samples, ...samples].map((s, i) => (
+                <div key={i} className="w-44 shrink-0">
+                  <div className="card-soft !p-3">
+                    <div className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${s.tone} flex items-center justify-center text-5xl`}>
+                      {s.emoji}
+                    </div>
+                    <div className="mt-3 text-sm font-semibold text-center truncate">{s.title}</div>
+                  </div>
                 </div>
-                <div className="mt-3 text-sm font-semibold text-center">{s.title}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
 
         {/* ===== FAQ ===== */}
-        <section className="mx-auto max-w-3xl px-4 py-16">
+        <section className="mx-auto max-w-3xl px-4 py-16 reveal">
           <h2 className="text-2xl md:text-3xl text-center">よくあるご質問</h2>
           <div className="mt-10 space-y-3">
             {faqs.map((f, i) => (
@@ -184,18 +226,20 @@ function LandingPage() {
                   aria-expanded={openFaq === i}
                 >
                   <span className="font-semibold">{f.q}</span>
-                  <span className="text-[color:var(--coral)] text-xl shrink-0">{openFaq === i ? "−" : "+"}</span>
+                  <span className="text-[color:var(--coral)] text-xl shrink-0 transition-transform duration-300" style={{ transform: openFaq === i ? "rotate(45deg)" : "none" }}>+</span>
                 </button>
-                {openFaq === i && (
-                  <div className="px-5 pb-5 text-sm text-[color:var(--muted-foreground)] leading-relaxed">{f.a}</div>
-                )}
+                <div className="grid transition-all duration-300 ease-out" style={{ gridTemplateRows: openFaq === i ? "1fr" : "0fr" }}>
+                  <div className="overflow-hidden">
+                    <div className="px-5 pb-5 text-sm text-[color:var(--muted-foreground)] leading-relaxed">{f.a}</div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </section>
 
         {/* ===== CTA banner ===== */}
-        <section className="mx-auto max-w-4xl px-4 pb-16">
+        <section className="mx-auto max-w-4xl px-4 pb-16 reveal">
           <div className="rounded-3xl bg-gradient-to-r from-[color:var(--coral)] to-[#ffb3a7] p-10 md:p-14 text-center text-white shadow-[var(--shadow-soft)]">
             <h2 className="text-2xl md:text-3xl text-white" style={{ fontFamily: "var(--font-display)" }}>
               あなたのお子さまの物語を、今すぐ始めよう

@@ -159,9 +159,49 @@
 @keyframes ds-vscroll-up { from { transform: translateY(0); } to { transform: translateY(-50%); } }
 @keyframes ds-vscroll-down { from { transform: translateY(-50%); } to { transform: translateY(0); } }
 
+@keyframes ds-rise {
+  0% { transform: translateY(10px) scale(0.85); opacity: 0; }
+  15% { opacity: 0.7; }
+  85% { opacity: 0.55; }
+  100% { transform: translateY(-130px) scale(1.05); opacity: 0; }
+}
+
+@keyframes ds-sweep {
+  0%, 55% { left: -60%; }
+  85%, 100% { left: 130%; }
+}
+@keyframes ds-wiggle {
+  0%, 100% { transform: rotate(0) scale(1); }
+  30% { transform: rotate(-6deg) scale(1.08); }
+  60% { transform: rotate(5deg) scale(1.06); }
+}
+/* Ambient shadow cast on the book while a leaf is mid-air during a page flip */
+@keyframes ds-flip-cast {
+  0%, 100% { opacity: 0; }
+  45%, 60% { opacity: 0.12; }
+}
+
 .ds-vup { animation: ds-vscroll-up var(--vspeed, 32s) linear infinite; }
 .ds-vdown { animation: ds-vscroll-down var(--vspeed, 32s) linear infinite; }
 .ds-float { animation: ds-float 6s ease-in-out infinite; }
+.ds-rise { animation: ds-rise var(--rspeed, 7s) ease-in-out infinite; }
+
+/* Soft light sweep across primary CTAs */
+.ds-shimmer { position: relative; overflow: hidden; }
+.ds-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-20deg);
+  animation: ds-sweep 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.group:hover .ds-hover-wiggle { animation: ds-wiggle 0.5s ease-in-out; }
 .ds-blob { animation: ds-blob 20s ease-in-out infinite; }
 .ds-marquee { animation: ds-marquee 34s linear infinite; }
 .ds-marquee:hover { animation-play-state: paused; }
@@ -171,6 +211,7 @@
 .reveal.is-in { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ds-float, .ds-blob, .ds-marquee, .ds-vup, .ds-vdown { animation: none !important; }
+  .ds-float, .ds-blob, .ds-marquee, .ds-vup, .ds-vdown, .ds-rise, .ds-hover-wiggle { animation: none !important; }
+  .ds-shimmer::after { animation: none !important; }
   .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
 }

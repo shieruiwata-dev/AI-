@@ -210,9 +210,33 @@ function PreviewPage() {
         </div>
       );
 
+    // Paper-curl treatment: the leaf's free edge gets a dark rim + a thin white
+    // highlight just inside it (reads as curved paper), and a soft band of
+    // light sweeps across the face while it turns.
+    const freeEdge = f.dir === 1 ? "right" : "left";
+    const curl = (edge: "left" | "right"): React.CSSProperties => ({
+      background:
+        edge === "right"
+          ? "linear-gradient(to left, rgba(0,0,0,0.20) 0%, rgba(255,255,255,0.30) 6%, rgba(255,255,255,0) 22%)"
+          : "linear-gradient(to right, rgba(0,0,0,0.20) 0%, rgba(255,255,255,0.30) 6%, rgba(255,255,255,0) 22%)",
+    });
+    const sheen = (running: boolean): React.CSSProperties => ({
+      backgroundImage: "linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.45) 50%, transparent 65%)",
+      backgroundSize: "250% 100%",
+      backgroundRepeat: "no-repeat",
+      backgroundPosition:
+        f.dir === 1 ? (running ? "-30% 0" : "130% 0") : (running ? "130% 0" : "-30% 0"),
+      transition: `background-position ${DURATION}ms ${EASE}`,
+    });
+
     return (
       <>
         <Base />
+        {/* ambient shadow the airborne leaf casts on the book (pulses mid-turn) */}
+        <div
+          className="pointer-events-none absolute inset-0 bg-black rounded-2xl"
+          style={{ opacity: 0, animation: `ds-flip-cast ${DURATION}ms ${EASE} both` }}
+        />
         <div
           className="absolute [transform-style:preserve-3d]"
           style={{ ...leafStyle, transform: `rotateY(${rot}deg)`, transition: trans, willChange: "transform" }}
@@ -220,11 +244,15 @@ function PreviewPage() {
           {/* front face (leaving page) */}
           <div className="absolute inset-0 [backface-visibility:hidden]">
             <Page p={P(frontIdx)} side={frontSide} />
+            <div className="pointer-events-none absolute inset-0" style={curl(freeEdge)} />
+            <div className="pointer-events-none absolute inset-0" style={sheen(f.running)} />
             <div className="pointer-events-none absolute inset-0 bg-black" style={{ opacity: f.running ? 0.28 : 0, transition: shadeTrans }} />
           </div>
           {/* back face (arriving page), pre-rotated */}
           <div className="absolute inset-0 [backface-visibility:hidden]" style={{ transform: "rotateY(180deg)" }}>
             <Page p={P(backIdx)} side={backSide} />
+            <div className="pointer-events-none absolute inset-0" style={curl(freeEdge === "right" ? "left" : "right")} />
+            <div className="pointer-events-none absolute inset-0" style={sheen(f.running)} />
             <div className="pointer-events-none absolute inset-0 bg-black" style={{ opacity: f.running ? 0 : 0.28, transition: shadeTrans }} />
           </div>
         </div>

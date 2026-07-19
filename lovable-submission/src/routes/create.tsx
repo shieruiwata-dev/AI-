@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { saveExtractedParams } from "@/lib/api";
 
 export const Route = createFileRoute("/create")({
   component: CreatePage,
@@ -83,6 +84,17 @@ function CreatePage() {
     if (mode !== "theme" || typing) return;
     pushUser(`${theme.emoji} ${theme.label}`);
     setMode("done");
+    // 資料Week5の仕様どおり、収集した回答をSessionStorageへ保存。
+    // 生成中画面（/generating）がここから読み出して generate-story に渡す。
+    // WEEK5: この台本対話をapi.difyChat()に差し替えたら、レスポンスの
+    //        extracted_params をそのまま保存する形になる。
+    saveExtractedParams({
+      child_name: data.current.name,
+      age: Number.parseInt(data.current.age, 10) || data.current.age,
+      interests: data.current.interests,
+      theme: theme.label,
+      language: "ja",
+    });
     aiSay(
       `ありがとうございます！${data.current.name}ちゃんの${theme.label}の絵本を作りますね。生成を開始します...`,
       () => {

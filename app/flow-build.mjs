@@ -443,10 +443,12 @@ ${css}
     els.forEach(function(e){ revealIO.observe(e); });
   }
 
-  function render(){
+  var currentPath = "/";
+  function render(pathArg){
     clearTimers();
     if(screenCleanup){ screenCleanup(); screenCleanup = null; }
-    var path = (location.hash.slice(1) || "/");
+    var path = pathArg || (location.hash.slice(1) || "/");
+    currentPath = path;
     var s = screenFor(path);
     if(s === "landing"){ root.innerHTML = LANDING; }
     else if(s === "mypage"){ root.innerHTML = MYPAGE; }
@@ -457,7 +459,12 @@ ${css}
     window.scrollTo(0,0);
     setupReveal();
   }
-  function navigate(path){ if(("#"+path) !== location.hash){ location.hash = path; } else { render(); } }
+  // Render the target directly — don't depend on hashchange firing (some
+  // sandboxed iframes suppress it). The hash is updated best-effort for deep links.
+  function navigate(path){
+    try { if(("#"+path) !== location.hash) location.hash = path; } catch(e){}
+    render(path);
+  }
 
   function normalize(href){ try{ href = new URL(href, location.origin).pathname; }catch(e){} if(href.length>1 && href.endsWith("/")) href = href.slice(0,-1); return href; }
   document.addEventListener("click", function(e){
@@ -474,8 +481,12 @@ ${css}
     e.preventDefault();
     navigate(normalize(el.getAttribute("data-href")));
   });
-  window.addEventListener("hashchange", render);
-  if(!location.hash) location.hash = "/"; else render();
+  window.addEventListener("hashchange", function(){
+    var p = location.hash.slice(1) || "/";
+    if(p !== currentPath) render(p); // only external hash changes (back button / manual)
+  });
+  try { if(!location.hash) location.hash = "/"; } catch(e){}
+  render((location.hash.slice(1)) || "/");
 })();
 </script>`;
 

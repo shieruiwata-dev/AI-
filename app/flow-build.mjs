@@ -210,36 +210,57 @@ ${css}
   }
 
   // ---- Screen: generating ----
-  var STATUSES = [
-    { at:0, text:"準備をしています..." },
-    { at:15, text:"物語を書いています..." },
-    { at:55, text:"イラストを描いています..." },
-    { at:85, text:"ページを組み立てています..." },
-    { at:100, text:"完成しました！" }
+  // Stage -> upper bound + status text (spec). Preview uses a fast demo pace.
+  var GEN_STAGES = [
+    { to:20, text:"お子さまの世界を想像しています…" },
+    { to:50, text:"物語を書いています…" },
+    { to:90, text:"イラストを描いています…" },
+    { to:100, text:"絵本を仕上げています…" }
   ];
-  function statusFor(p){ for(var i=STATUSES.length-1;i>=0;i--){ if(p>=STATUSES[i].at) return STATUSES[i].text; } return ""; }
+  var GEN_STAGE_MS = [2600, 3000, 3000, 2200]; // preview demo speed (~11s)
+  var GEN_SPARKLES = [
+    {e:"⭐",l:"12%",d:"0s",s:"7s"},{e:"💗",l:"24%",d:"2.4s",s:"8s"},{e:"✨",l:"38%",d:"1.2s",s:"6.5s"},
+    {e:"🌟",l:"52%",d:"3.1s",s:"7.5s"},{e:"💗",l:"66%",d:"0.6s",s:"8.5s"},{e:"✨",l:"78%",d:"2s",s:"6.8s"},
+    {e:"⭐",l:"88%",d:"3.6s",s:"7.2s"},{e:"🌙",l:"6%",d:"1.8s",s:"9s"}
+  ];
+  function genStatus(p, done){ if(done) return "完成！プレビューへ移動します…"; for(var i=0;i<GEN_STAGES.length;i++){ if(p<GEN_STAGES[i].to) return GEN_STAGES[i].text; } return GEN_STAGES[GEN_STAGES.length-1].text; }
   function renderGenerating(){
-    root.innerHTML = header()
-      + '<div class="min-h-screen flex flex-col"><main class="flex-1 flex items-center justify-center px-4">'
-      + '<div class="w-full max-w-md card-soft text-center">'
-      + '<div class="mx-auto relative h-28 w-28">'
-      + '<div class="absolute inset-0 rounded-full bg-[color:var(--butter)] animate-pulse"></div>'
-      + '<div class="absolute inset-2 rounded-full bg-white flex items-center justify-center text-4xl">📖</div>'
-      + '<div class="absolute inset-0 rounded-full border-4 border-transparent border-t-[color:var(--coral)] animate-spin"></div></div>'
-      + '<h1 id="genStatus" class="mt-6 text-xl"></h1>'
-      + '<p class="mt-1 text-xs text-[color:var(--muted-foreground)]">絵本を生成中です。しばらくお待ちください。</p>'
-      + '<div class="mt-6"><div class="h-3 w-full rounded-full bg-[color:var(--muted)] overflow-hidden">'
-      + '<div id="genBar" class="h-full bg-gradient-to-r from-[color:var(--coral)] to-[color:var(--butter)] transition-all duration-200" style="width:0%"></div></div>'
-      + '<div id="genPct" class="mt-2 text-sm font-semibold text-[color:var(--coral)]">0%</div></div>'
+    var R = 95, C = 2*Math.PI*R;
+    var spark = GEN_SPARKLES.map(function(s){ return '<span class="ds-rise absolute bottom-10 text-base" style="left:'+s.l+';--rspeed:'+s.s+';animation-delay:'+s.d+'">'+s.e+'</span>'; }).join("");
+    root.innerHTML =
+      '<div class="min-h-screen flex flex-col bg-[color:var(--cream)]">' + header()
+      + '<main class="relative flex-1 flex items-center justify-center px-4 overflow-hidden">'
+      + '<div class="pointer-events-none absolute inset-0">' + spark + '</div>'
+      + '<div class="relative w-full max-w-md card-soft text-center">'
+      + '<div class="relative mx-auto h-56 w-56">'
+      + '<svg viewBox="0 0 220 220" class="h-56 w-56 -rotate-90"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF9AA2"/><stop offset="0.6" stop-color="#FFB3A7"/><stop offset="1" stop-color="#FFE5A0"/></linearGradient></defs>'
+      + '<circle cx="110" cy="110" r="'+R+'" fill="none" stroke="var(--muted)" stroke-width="16"/>'
+      + '<circle id="genRing" cx="110" cy="110" r="'+R+'" fill="none" stroke="url(#ringGrad)" stroke-width="16" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+C+'" style="transition:stroke-dashoffset 0.25s ease"/></svg>'
+      + '<div class="absolute inset-0 flex flex-col items-center justify-center">'
+      + '<span class="text-6xl font-bold text-[color:var(--coral)] tabular-nums leading-none" style="font-family:var(--font-display)"><span id="genPct">0</span><span class="text-2xl align-top">%</span></span>'
+      + '<span class="mt-1 text-xs text-[color:var(--muted-foreground)]">生成中</span></div></div>'
+      + '<div class="mt-8 h-7"><p id="genStatus" class="animate-in fade-in duration-500 text-lg font-semibold text-[color:var(--foreground)]"></p></div>'
+      + '<p id="genSub" class="mt-2 text-xs text-[color:var(--muted-foreground)]">絵本ができるまで、少しだけお待ちください。</p>'
       + '</div></main></div>';
-    var p = 0;
-    var bar = document.getElementById("genBar"), pct = document.getElementById("genPct"), st = document.getElementById("genStatus");
-    st.textContent = statusFor(0);
+    var ring = document.getElementById("genRing"), pctEl = document.getElementById("genPct"), stEl = document.getElementById("genStatus"), subEl = document.getElementById("genSub");
+    stEl.textContent = genStatus(0, false);
+    var p = 0, TICK = 120;
     var id = setInterval(function(){
-      p = Math.min(100, p + 2);
-      bar.style.width = p + "%"; pct.textContent = p + "%"; st.textContent = statusFor(p);
-      if(p >= 100){ clearInterval(id); timers.push(setTimeout(function(){ navigate("/preview/demo"); }, 700)); }
-    }, 120);
+      var si = 0; for(var k=0;k<GEN_STAGES.length;k++){ if(p<GEN_STAGES[k].to){ si=k; break; } }
+      var prevTo = si===0?0:GEN_STAGES[si-1].to;
+      var perTick = (GEN_STAGES[si].to - prevTo) / (GEN_STAGE_MS[si] / TICK);
+      p = Math.min(100, p + perTick * (0.3 + Math.random()*1.5));
+      var pct = Math.min(100, Math.round(p));
+      ring.style.strokeDashoffset = (C * (1 - pct/100));
+      pctEl.textContent = pct;
+      var prev = stEl.textContent, next = genStatus(p, false);
+      if(next !== prev){ stEl.textContent = next; stEl.classList.remove("animate-in","fade-in","duration-500"); void stEl.offsetWidth; stEl.classList.add("animate-in","fade-in","duration-500"); }
+      if(p >= 100){
+        clearInterval(id);
+        stEl.textContent = genStatus(100, true); subEl.textContent = "もうすぐできあがります 🎉";
+        timers.push(setTimeout(function(){ navigate("/preview/demo"); }, 2000));
+      }
+    }, TICK);
     timers.push(id);
   }
 

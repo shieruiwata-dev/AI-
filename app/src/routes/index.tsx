@@ -46,6 +46,27 @@ const heroArt = `data:image/svg+xml,${encodeURIComponent(
   </svg>`,
 )}`;
 
+// Book covers for the animated hero columns (warm gradients + emoji).
+const coverPool = [
+  { emoji: "🚀", tone: "from-[color:var(--sky)]/70 to-[color:var(--butter)]/70" },
+  { emoji: "🦖", tone: "from-[color:var(--butter)]/70 to-[color:var(--coral)]/60" },
+  { emoji: "🐟", tone: "from-[color:var(--sky)]/70 to-[color:var(--coral)]/50" },
+  { emoji: "🌸", tone: "from-[color:var(--coral)]/50 to-[color:var(--butter)]/70" },
+  { emoji: "🎏", tone: "from-[color:var(--butter)]/70 to-[color:var(--sky)]/70" },
+  { emoji: "🐻", tone: "from-[color:var(--coral)]/50 to-[color:var(--sky)]/70" },
+  { emoji: "🌈", tone: "from-[color:var(--sky)]/60 to-[color:var(--butter)]/70" },
+  { emoji: "⭐", tone: "from-[color:var(--butter)]/80 to-[color:var(--coral)]/50" },
+  { emoji: "🏰", tone: "from-[color:var(--coral)]/50 to-[color:var(--sky)]/60" },
+  { emoji: "🚂", tone: "from-[color:var(--sky)]/70 to-[color:var(--coral)]/50" },
+  { emoji: "🦋", tone: "from-[color:var(--butter)]/70 to-[color:var(--sky)]/70" },
+  { emoji: "🌙", tone: "from-[color:var(--sky)]/70 to-[color:var(--butter)]/70" },
+];
+// 6 columns × 4 covers, offset so each column differs.
+const coverColumns = Array.from({ length: 6 }, (_, c) =>
+  Array.from({ length: 4 }, (_, r) => coverPool[(c * 5 + r * 3 + c) % coverPool.length]),
+);
+const colSpeeds = ["30s", "38s", "26s", "34s", "29s", "42s"];
+
 const features = [
   { icon: "🖋️", title: "AIが物語を紡ぐ", desc: "GPT-4があなたのお子さまだけの物語を作成します。" },
   { icon: "📖", title: "12ページのフルカラー絵本", desc: "美しいイラストと共に、本格的な絵本仕様でお届けします。" },
@@ -111,45 +132,63 @@ function LandingPage() {
       <main>
         {/* ===== Hero ===== */}
         <section className="relative overflow-hidden bg-gradient-to-b from-[color:var(--cream)] to-[#FFECEE]">
-          {/* animated soft backdrop */}
-          <div className="pointer-events-none absolute inset-0 -z-0" aria-hidden="true">
-            <div className="ds-blob absolute -top-24 -left-16 h-72 w-72 rounded-full bg-[color:var(--coral)] opacity-20 blur-3xl" />
-            <div className="ds-blob absolute top-10 right-0 h-80 w-80 rounded-full bg-[color:var(--sky)] opacity-25 blur-3xl" style={{ animationDelay: "-6s" }} />
-            <div className="ds-blob absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-[color:var(--butter)] opacity-30 blur-3xl" style={{ animationDelay: "-12s" }} />
+          {/* Animated book-cover columns (↓↑↓↑ per column). Fewer columns on mobile. */}
+          <div className="pointer-events-none absolute inset-0 flex gap-3 md:gap-4 px-3" aria-hidden="true">
+            {coverColumns.map((col, c) => (
+              <div key={c} className={`flex-1 overflow-hidden ${c % 2 === 1 ? "hidden sm:block" : ""}`}>
+                <div
+                  className={`flex flex-col gap-3 md:gap-4 ${c % 2 === 0 ? "ds-vdown" : "ds-vup"}`}
+                  style={{ ["--vspeed" as string]: colSpeeds[c] }}
+                >
+                  {[...col, ...col].map((cv, r) => (
+                    <div
+                      key={r}
+                      className={`aspect-[3/4] rounded-xl shadow-md bg-gradient-to-br ${cv.tone} flex items-center justify-center text-4xl md:text-5xl`}
+                    >
+                      {cv.emoji}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24 grid items-center gap-10 md:grid-cols-2">
-            <div className="text-center md:text-left">
-              <span className={`inline-flex items-center gap-2 rounded-full bg-white/80 border border-[color:var(--border)] px-4 py-1.5 text-xs font-semibold text-[color:var(--coral)] shadow-sm ${RISE}`} style={rise(0)}>
-                🌸 AIパーソナライズ絵本
-              </span>
-              <h1 className="mt-6" style={{ fontFamily: "var(--font-display)" }}>
-                <span className={`block text-4xl md:text-6xl leading-tight tracking-tight ${RISE}`} style={rise(90)}>
-                  あなたのお子さまが
-                </span>
-                <span className={`block mt-1 text-2xl md:text-3xl leading-snug text-[color:var(--coral)] ${RISE}`} style={rise(180)}>
-                  主人公の絵本
-                </span>
-              </h1>
-              <p className={`mt-5 text-base md:text-lg text-[color:var(--muted-foreground)] max-w-md mx-auto md:mx-0 ${RISE}`} style={rise(280)}>
-                AIが12ページの世界にひとつだけの絵本を、たった5分で。
-              </p>
-              <div className={RISE} style={rise(380)}>
-                <div className="mt-8">
-                  <Link to="/create" className="btn-primary text-lg !px-8 !py-4 shadow-[var(--shadow-soft)] hover:shadow-lg">
-                    絵本を作る →
-                  </Link>
-                </div>
-                <p className="mt-3 text-xs text-[color:var(--muted-foreground)]">🎁 クレジットカード不要でお試し</p>
-              </div>
-            </div>
+          {/* Extra cream veil on small screens so the centered text stays legible */}
+          <div className="pointer-events-none absolute inset-0 bg-[color:var(--cream)]/35 sm:hidden" aria-hidden="true" />
 
-            <div className={`${RISE}`} style={rise(240)}>
-              <img
-                src={heroArt}
-                alt="家族で絵本を読む様子"
-                className="ds-float w-full max-w-md mx-auto rounded-3xl shadow-[var(--shadow-soft)]"
-              />
+          {/* Cream scrim: calm center for the headline, books stay visible at the sides */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            aria-hidden="true"
+            style={{
+              backgroundImage:
+                "radial-gradient(ellipse 55% 75% at 50% 45%, var(--cream) 0%, var(--cream) 34%, color-mix(in srgb, var(--cream) 55%, transparent) 60%, transparent 78%), linear-gradient(to bottom, var(--cream) 0%, transparent 18%, transparent 82%, #FFECEE 100%)",
+            }}
+          />
+
+          {/* Centered content */}
+          <div className="relative mx-auto max-w-2xl px-4 py-24 md:py-32 text-center">
+            <span className={`inline-flex items-center gap-2 rounded-full bg-white/85 border border-[color:var(--border)] px-4 py-1.5 text-xs font-semibold text-[color:var(--coral)] shadow-sm ${RISE}`} style={rise(0)}>
+              🌸 AIパーソナライズ絵本
+            </span>
+            <h1 className="mt-6" style={{ fontFamily: "var(--font-display)" }}>
+              <span className={`block text-4xl md:text-6xl leading-tight tracking-tight ${RISE}`} style={rise(90)}>
+                あなたのお子さまが
+              </span>
+              <span className={`block mt-1 text-2xl md:text-4xl leading-snug text-[color:var(--coral)] ${RISE}`} style={rise(180)}>
+                主人公の絵本
+              </span>
+            </h1>
+            <p className={`mt-5 text-base md:text-lg text-[color:var(--muted-foreground)] max-w-md mx-auto ${RISE}`} style={rise(280)}>
+              AIが12ページの世界にひとつだけの絵本を、たった5分で。
+            </p>
+            <div className={RISE} style={rise(380)}>
+              <div className="mt-8">
+                <Link to="/create" className="btn-primary text-lg !px-8 !py-4 shadow-[var(--shadow-soft)] hover:shadow-lg">
+                  絵本を作る →
+                </Link>
+              </div>
+              <p className="mt-3 text-xs text-[color:var(--muted-foreground)]">🎁 クレジットカード不要でお試し</p>
             </div>
           </div>
         </section>

@@ -97,6 +97,7 @@ ${css}
   var root = document.getElementById("root");
   var toastEl = document.getElementById("ds-toast");
   var timers = [];
+  var screenCleanup = null; // per-screen listener teardown (keyboard/resize)
   function clearTimers(){ timers.forEach(function(t){ clearInterval(t); clearTimeout(t); }); timers = []; }
   function toast(msg){ toastEl.textContent = msg; toastEl.style.opacity = "1"; clearTimeout(toastEl._h); toastEl._h = setTimeout(function(){ toastEl.style.opacity="0"; }, 1800); }
 
@@ -243,41 +244,90 @@ ${css}
   }
 
   // ---- Screen: preview ----
-  var pv = { page: 0 };
+  var PV_TITLE = "たろうくんの ぼうけん";
+  var PV_TEXTS = [
+    "むかしむかし、たろうくんは、ふしぎな もりへ でかけました。",
+    "もりの いりぐちで、しろい うさぎに であいました。",
+    "うさぎは「ぼくと いっしょに ぼうけんしない？」と いいました。",
+    "ふたりは もりの おくへ すすんでいきます。",
+    "きれいな はなばたけが ひろがっていました。",
+    "そらには おおきな にじが かかっています。",
+    "もりの くまさんも おともだちに なりました。",
+    "やまの てっぺんを めざして のぼります。",
+    "うみのような おおきな みずうみが みえました。",
+    "さくらの きの したで ひとやすみ。",
+    "よるには まんてんの ほしぞらが ひろがります。",
+    "たろうくんの ぼうけんは、まだまだ つづきます。"
+  ];
+  function pvPlaceholder(n){ return "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><rect width="600" height="400" fill="#FFE5A0"/><text x="300" y="215" font-family="sans-serif" font-size="42" fill="#333333" text-anchor="middle">Page ' + n + '</text></svg>'); }
+
   function renderPreview(){
-    pv.page = 0;
-    root.innerHTML = header()
-      + '<div class="min-h-screen flex flex-col"><main class="flex-1 mx-auto w-full max-w-4xl px-4 py-6">'
-      + '<div class="text-center text-sm text-[color:var(--muted-foreground)] mb-3">プレビュー #demo</div>'
-      + '<div class="relative">'
-      + '<div class="card-soft !p-0 overflow-hidden aspect-[4/5] md:aspect-[3/2] flex flex-col md:flex-row">'
-      + '<div id="pvEmoji" class="flex-1 bg-gradient-to-br from-[color:var(--sky)]/40 via-[color:var(--butter)]/40 to-[color:var(--coral)]/30 flex items-center justify-center text-8xl md:text-9xl"></div>'
-      + '<div class="md:w-2/5 p-6 md:p-10 flex flex-col justify-center bg-white">'
-      + '<p id="pvText" class="text-lg md:text-xl leading-relaxed" style="font-family:var(--font-display)"></p>'
-      + '<div id="pvNum" class="mt-6 text-xs text-[color:var(--muted-foreground)]"></div></div></div>'
-      + '<button id="pvPrev" class="absolute left-2 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white shadow-md border border-[color:var(--border)] disabled:opacity-40">←</button>'
-      + '<button id="pvNext" class="absolute right-2 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white shadow-md border border-[color:var(--border)] disabled:opacity-40">→</button>'
+    var total = PV_TEXTS.length;
+    var index = 0;
+    function per(){ return window.innerWidth < 768 ? 1 : 2; }
+
+    root.innerHTML =
+      '<header class="sticky top-0 z-40 backdrop-blur bg-[color:var(--cream)]/80 border-b border-[color:var(--border)]">'
+      + '<div class="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">'
+      + '<a data-href="/mypage" class="h-9 w-9 shrink-0 rounded-full border border-[color:var(--border)] bg-white flex items-center justify-center text-[color:var(--muted-foreground)]" style="cursor:pointer" aria-label="戻る">←</a>'
+      + '<div class="font-bold truncate text-center" style="font-family:var(--font-display)">' + PV_TITLE + '</div>'
+      + '<button data-toast="共有リンクをコピーしました" class="h-9 w-9 shrink-0 rounded-full border border-[color:var(--border)] bg-white flex items-center justify-center text-[color:var(--muted-foreground)]" aria-label="共有">🔗</button>'
+      + '</div></header>'
+      + '<div class="min-h-screen flex flex-col bg-[color:var(--cream)]">'
+      + '<main class="flex-1 mx-auto w-full max-w-5xl px-4 py-6">'
+      + '<div class="text-center text-xs text-[color:var(--muted-foreground)] mb-3">プレビュー #demo</div>'
+      + '<div id="pvWrap" class="relative">'
+      + '<div id="pvSpread" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 animate-in fade-in duration-300"></div>'
+      + '<button id="pvPrev" class="absolute -left-2 md:-left-5 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-white shadow-md border border-[color:var(--border)] text-xl text-[color:var(--coral)] disabled:opacity-30 transition" aria-label="前へ">←</button>'
+      + '<button id="pvNext" class="absolute -right-2 md:-right-5 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-white shadow-md border border-[color:var(--border)] text-xl text-[color:var(--coral)] disabled:opacity-30 transition" aria-label="次へ">→</button>'
       + '</div>'
-      + '<div id="pvDots" class="mt-4 flex justify-center gap-1.5"></div>'
-      + '<div class="mt-8 flex justify-center"><a data-href="/checkout/demo" class="btn-primary text-base" style="cursor:pointer">この絵本を購入する</a></div>'
-      + '</main></div>';
+      + '<div class="mt-6 flex items-center justify-center gap-3"><div id="pvDots" class="flex gap-1.5"></div><span id="pvLabel" class="text-sm text-[color:var(--muted-foreground)] tabular-nums"></span></div>'
+      + '</main>'
+      + '<div class="sticky bottom-0 border-t border-[color:var(--border)] bg-[color:var(--cream)]/90 backdrop-blur"><div class="mx-auto max-w-5xl px-4 py-3"><a id="pvBuy" data-href="/checkout/demo" class="btn-primary w-full text-base !py-4 transition" style="cursor:pointer">この絵本を購入する（5,000円）</a></div></div>'
+      + '</div>';
+
+    function fade(){ var s = document.getElementById("pvSpread"); s.classList.remove("animate-in","fade-in"); void s.offsetWidth; s.classList.add("animate-in","fade-in"); }
     function paint(){
-      var c = PAGES[pv.page];
-      document.getElementById("pvEmoji").textContent = c.emoji;
-      document.getElementById("pvText").textContent = c.text;
-      document.getElementById("pvNum").textContent = "ページ " + (pv.page+1) + " / " + PAGES.length;
-      document.getElementById("pvPrev").disabled = pv.page === 0;
-      document.getElementById("pvNext").disabled = pv.page === PAGES.length-1;
+      var p = per();
+      var lastIndex = (Math.ceil(total/p)-1)*p;
+      index = Math.min(Math.floor(index/p)*p, lastIndex);
+      var spread = document.getElementById("pvSpread");
+      spread.innerHTML = "";
+      for(var k=index; k<index+p && k<total; k++){
+        var n = k+1;
+        var card = document.createElement("div");
+        card.className = "rounded-2xl overflow-hidden bg-white border border-[color:var(--border)] shadow-[0_10px_30px_-14px_rgba(120,90,70,0.35)]";
+        card.innerHTML = '<img src="' + pvPlaceholder(n) + '" alt="ページ' + n + 'のイラスト" class="w-full aspect-[3/2] object-cover" /><div class="p-5 md:p-7"><p class="text-base md:text-lg leading-loose" style="font-family:var(--font-display)">' + esc(PV_TEXTS[k]) + '</p><div class="mt-4 text-xs text-[color:var(--muted-foreground)] text-right">— ' + n + ' —</div></div>';
+        spread.appendChild(card);
+      }
+      var views = Math.ceil(total/p), cur = Math.floor(index/p);
       var dots = document.getElementById("pvDots"); dots.innerHTML = "";
-      PAGES.forEach(function(_, i){
-        var b = document.createElement("button");
-        b.className = "h-2 rounded-full transition-all " + (i===pv.page ? "w-6 bg-[color:var(--coral)]" : "w-2 bg-[color:var(--border)]");
-        b.addEventListener("click", function(){ pv.page = i; paint(); });
-        dots.appendChild(b);
-      });
+      for(var v=0; v<views; v++){ var s = document.createElement("span"); s.className = "h-2 rounded-full transition-all " + (v===cur ? "w-5 bg-[color:var(--coral)]" : "w-2 bg-[color:var(--border)]"); dots.appendChild(s); }
+      document.getElementById("pvLabel").textContent = p>1 ? (index+1)+"–"+Math.min(index+p,total)+" / "+total : (index+1)+" / "+total;
+      var atStart = index===0, atEnd = index>=lastIndex;
+      document.getElementById("pvPrev").disabled = atStart;
+      document.getElementById("pvNext").disabled = atEnd;
+      var buy = document.getElementById("pvBuy");
+      if(atEnd){ buy.classList.add("ring-4","ring-[color:var(--butter)]","scale-[1.01]"); }
+      else { buy.classList.remove("ring-4","ring-[color:var(--butter)]","scale-[1.01]"); }
     }
-    document.getElementById("pvPrev").addEventListener("click", function(){ if(pv.page>0){ pv.page--; paint(); } });
-    document.getElementById("pvNext").addEventListener("click", function(){ if(pv.page<PAGES.length-1){ pv.page++; paint(); } });
+    function go(dir){ var p = per(); var lastIndex = (Math.ceil(total/p)-1)*p; var ni = Math.max(0, Math.min(index + dir*p, lastIndex)); if(ni!==index){ index = ni; fade(); } paint(); }
+
+    document.getElementById("pvPrev").addEventListener("click", function(){ go(-1); });
+    document.getElementById("pvNext").addEventListener("click", function(){ go(1); });
+
+    // swipe (mobile)
+    var wrap = document.getElementById("pvWrap"), tx = null;
+    wrap.addEventListener("touchstart", function(e){ tx = e.touches[0].clientX; }, { passive:true });
+    wrap.addEventListener("touchend", function(e){ if(tx==null) return; var dx = e.changedTouches[0].clientX - tx; if(Math.abs(dx)>40) go(dx<0?1:-1); tx = null; });
+
+    // keyboard + resize (cleaned up on screen change)
+    var onKey = function(e){ if(e.key==="ArrowLeft") go(-1); if(e.key==="ArrowRight") go(1); };
+    var onResize = function(){ paint(); };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onResize);
+    screenCleanup = function(){ window.removeEventListener("keydown", onKey); window.removeEventListener("resize", onResize); };
+
     paint();
   }
 
@@ -321,6 +371,7 @@ ${css}
   }
   function render(){
     clearTimers();
+    if(screenCleanup){ screenCleanup(); screenCleanup = null; }
     var path = (location.hash.slice(1) || "/");
     var s = screenFor(path);
     if(s === "landing"){ root.innerHTML = LANDING; }

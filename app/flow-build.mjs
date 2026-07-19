@@ -71,11 +71,13 @@ ${css}
   var LANDING = ${JSON.stringify(LANDING)};
   var MYPAGE = ${JSON.stringify(MYPAGE)};
 
-  var QUESTIONS = [
-    "こんにちは！お子さまの絵本を作りましょう。まず、お子さまのお名前を教えてください。",
-    "ありがとうございます！お子さまの年齢を教えてください。（例：5歳）",
-    "素敵ですね。お子さまが好きなものや興味のあることを教えてください。（例：恐竜、電車、お姫さま）",
-    "最後に、どんなテーマの絵本がいいですか？（例：冒険、友情、魔法）"
+  var WELCOME = "DreamStoriesへようこそ！お子さまの絵本を作りましょう。まず、お子さまのお名前を教えてください。";
+  var THEMES = [
+    { emoji:"🚀", label:"宇宙冒険" },
+    { emoji:"🦖", label:"恐竜の世界" },
+    { emoji:"🐟", label:"海の探検" },
+    { emoji:"🌲", label:"魔法の森" },
+    { emoji:"🎋", label:"お祭り冒険" }
   ];
   var PAGES = [
     {emoji:"🌅",text:"ある日、ゆうきくんは不思議な森へと出かけました。"},
@@ -112,44 +114,98 @@ ${css}
       + '</nav></div></header>';
   }
 
+  // Simple header (logo + back) for the onboard chat.
+  function simpleHeader(){
+    return '<header class="sticky top-0 z-40 backdrop-blur bg-[color:var(--cream)]/80 border-b border-[color:var(--border)]">'
+      + '<div class="mx-auto max-w-2xl px-4 py-3 flex items-center gap-3">'
+      + '<a data-href="/" class="h-9 w-9 shrink-0 rounded-full border border-[color:var(--border)] bg-white flex items-center justify-center text-[color:var(--muted-foreground)]" style="cursor:pointer" aria-label="戻る">←</a>'
+      + '<a data-href="/" class="flex items-center gap-2" style="cursor:pointer">'
+      + '<span class="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[color:var(--coral)] text-white text-base">✦</span>'
+      + '<span class="text-base font-bold tracking-tight" style="font-family:var(--font-display)">DreamStories</span></a>'
+      + '</div></header>';
+  }
+
   // ---- Screen: create (chat) ----
-  var chat = { messages: [], step: 0 };
+  var TOTAL = 4;
   function renderCreate(){
-    chat = { messages: [{ role:"ai", text: QUESTIONS[0] }], step: 0 };
-    root.innerHTML = header()
-      + '<div class="min-h-screen flex flex-col"><main class="flex-1 mx-auto w-full max-w-2xl px-4 py-6 flex flex-col">'
+    var step = 0, mode = "text", typing = false;
+    var info = { name:"", age:"" };
+    var placeholders = ["お名前を入力...", "年齢を入力...", "好きなものを入力..."];
+
+    root.innerHTML = simpleHeader()
+      + '<div class="min-h-screen flex flex-col bg-[color:var(--cream)]">'
+      + '<div class="mx-auto w-full max-w-2xl px-4 pt-3">'
+      + '<div class="flex items-center justify-between text-xs text-[color:var(--muted-foreground)] mb-1.5"><span>お子さまについて教えてください</span><span id="chatProg" class="font-semibold text-[color:var(--coral)] tabular-nums">1 / 4</span></div>'
+      + '<div class="h-1.5 w-full rounded-full bg-[color:var(--muted)] overflow-hidden"><div id="chatBar" class="h-full rounded-full bg-[color:var(--coral)] transition-all duration-500" style="width:25%"></div></div></div>'
+      + '<main class="flex-1 mx-auto w-full max-w-2xl px-4 py-4 flex flex-col min-h-0">'
       + '<div id="chatScroll" class="flex-1 overflow-y-auto space-y-3 pb-4"></div>'
-      + '<form id="chatForm" class="sticky bottom-2 flex gap-2 bg-[color:var(--cream)]/90 backdrop-blur pt-2">'
-      + '<input id="chatInput" placeholder="メッセージを入力..." class="flex-1 rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[color:var(--coral)]/40" />'
-      + '<button type="submit" class="btn-primary !py-3 !px-5">送信</button></form></main></div>';
+      + '<div id="chatDock" class="sticky bottom-2 bg-[color:var(--cream)]/90 backdrop-blur pt-2"></div>'
+      + '</main></div>';
+
     var scroll = document.getElementById("chatScroll");
+    var dock = document.getElementById("chatDock");
+    var prog = document.getElementById("chatProg"), bar = document.getElementById("chatBar");
+
+    function setProgress(){ var p = Math.min(step+1, TOTAL); prog.textContent = p + " / " + TOTAL; bar.style.width = (p/TOTAL*100) + "%"; }
+    function scrollDown(){ scroll.scrollTo({ top: scroll.scrollHeight, behavior:"smooth" }); }
+
     function bubble(m){
       var wrap = document.createElement("div");
-      wrap.className = "flex " + (m.role==="user"?"justify-end":"justify-start") + " animate-in slide-in-from-bottom-2 duration-300";
+      wrap.className = "flex " + (m.role==="user"?"justify-end":"justify-start") + " animate-in fade-in slide-in-from-bottom-2 duration-300";
       wrap.innerHTML = (m.role==="ai" ? '<div class="mr-2 h-9 w-9 shrink-0 rounded-full bg-[color:var(--butter)] flex items-center justify-center">🧚</div>' : '')
-        + '<div class="max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ' + (m.role==="user" ? 'bg-[color:var(--coral)] text-white rounded-br-md' : 'bg-white border border-[color:var(--border)] rounded-bl-md') + '">' + esc(m.text) + '</div>';
-      scroll.appendChild(wrap);
-      scroll.scrollTo({ top: scroll.scrollHeight, behavior: "smooth" });
+        + '<div class="max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ' + (m.role==="user" ? 'bg-[color:var(--sky)] text-[#1F3A47] rounded-br-md' : 'bg-[#FFE9EA] text-[#5B4145] rounded-bl-md') + '">' + esc(m.text) + '</div>';
+      scroll.appendChild(wrap); scrollDown();
     }
-    chat.messages.forEach(bubble);
-    var input = document.getElementById("chatInput");
-    input.focus();
-    document.getElementById("chatForm").addEventListener("submit", function(e){
-      e.preventDefault();
-      var v = input.value.trim();
-      if(!v) return;
-      bubble({ role:"user", text:v });
-      var nextStep = chat.step + 1;
-      if(nextStep < QUESTIONS.length){
-        chat.step = nextStep;
-        setTimeout(function(){ bubble({ role:"ai", text: QUESTIONS[nextStep] }); }, 350);
+    function showTyping(on){
+      var ex = document.getElementById("typingRow");
+      if(on){
+        if(ex) return;
+        var row = document.createElement("div");
+        row.id = "typingRow";
+        row.className = "flex justify-start animate-in fade-in duration-200";
+        row.innerHTML = '<div class="mr-2 h-9 w-9 shrink-0 rounded-full bg-[color:var(--butter)] flex items-center justify-center">🧚</div>'
+          + '<div class="rounded-2xl rounded-bl-md bg-[#FFE9EA] text-[color:var(--coral)] px-4 py-4 shadow-sm flex items-center gap-1.5">'
+          + '<span class="ds-dot"></span><span class="ds-dot" style="animation-delay:.2s"></span><span class="ds-dot" style="animation-delay:.4s"></span></div>';
+        scroll.appendChild(row); scrollDown();
+      } else if(ex){ ex.remove(); }
+    }
+    function aiSay(text, after){
+      typing = true; renderDock(); showTyping(true);
+      timers.push(setTimeout(function(){ typing = false; showTyping(false); bubble({role:"ai",text:text}); renderDock(); if(after) after(); }, 900));
+    }
+
+    function renderDock(){
+      if(mode === "theme"){
+        dock.innerHTML = '<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">'
+          + THEMES.map(function(t){ return '<button data-theme="'+t.label+'" data-emoji="'+t.emoji+'"'+(typing?' disabled':'')+' class="rounded-2xl border-2 border-[color:var(--coral)] bg-white px-3 py-3 text-sm font-semibold text-[color:var(--coral)] hover:bg-[color:var(--coral)] hover:text-white transition-colors disabled:opacity-50"><span class="text-lg mr-1">'+t.emoji+'</span>'+t.label+'</button>'; }).join("")
+          + '</div>';
+      } else if(mode === "done"){
+        dock.innerHTML = '<div class="text-center text-sm text-[color:var(--muted-foreground)] py-3">絵本の生成を開始しています...</div>';
       } else {
-        setTimeout(function(){ bubble({ role:"ai", text:"ありがとうございます！絵本の作成を開始します..." }); }, 350);
-        timers.push(setTimeout(function(){ navigate("/generating"); }, 1400));
+        dock.innerHTML = '<form id="chatForm" class="flex gap-2"><input id="chatInput" placeholder="'+(placeholders[step]||"メッセージを入力...")+'"'+(typing?' disabled':'')+' class="flex-1 rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[color:var(--coral)]/40 disabled:opacity-60" /><button type="submit"'+(typing?' disabled':'')+' class="btn-primary !py-3 !px-5 disabled:opacity-50">送信</button></form>';
+        var form = document.getElementById("chatForm"), input = document.getElementById("chatInput");
+        if(input && !typing) input.focus();
+        if(form) form.addEventListener("submit", function(e){ e.preventDefault(); sendText(input.value); });
       }
-      input.value = "";
-      input.focus();
-    });
+    }
+    function sendText(raw){
+      var v = (raw||"").trim();
+      if(!v || mode!=="text" || typing) return;
+      bubble({role:"user",text:v});
+      if(step===0){ info.name=v; step=1; setProgress(); aiSay(info.name+"ちゃんですね！おいくつですか？"); }
+      else if(step===1){ info.age=v; step=2; setProgress(); aiSay(info.name+"ちゃんは"+v+"歳ですね。普段、どんなことが好きですか？"); }
+      else if(step===2){ step=3; setProgress(); aiSay("素敵ですね！以下のテーマから選んでいただけますか？", function(){ mode="theme"; renderDock(); }); }
+    }
+    dock._choose = function(label, emoji){
+      if(mode!=="theme" || typing) return;
+      bubble({role:"user",text:emoji+" "+label});
+      mode = "done"; renderDock();
+      aiSay("ありがとうございます！"+info.name+"ちゃんの"+label+"の絵本を作りますね。生成を開始します...", function(){ timers.push(setTimeout(function(){ navigate("/generating"); }, 3000)); });
+    };
+
+    setProgress();
+    renderDock();
+    aiSay(WELCOME);
   }
 
   // ---- Screen: generating ----
@@ -279,6 +335,12 @@ ${css}
 
   function normalize(href){ try{ href = new URL(href, location.origin).pathname; }catch(e){} if(href.length>1 && href.endsWith("/")) href = href.slice(0,-1); return href; }
   document.addEventListener("click", function(e){
+    var th = e.target.closest ? e.target.closest("[data-theme]") : null;
+    if(th){
+      var dock = document.getElementById("chatDock");
+      if(dock && dock._choose) dock._choose(th.getAttribute("data-theme"), th.getAttribute("data-emoji"));
+      return;
+    }
     var t = e.target.closest ? e.target.closest("[data-toast]") : null;
     if(t){ toast(t.getAttribute("data-toast")); return; }
     var el = e.target.closest ? e.target.closest("[data-href]") : null;

@@ -144,8 +144,10 @@
   .mt-10 { margin-top: calc(var(--spacing) * 10); }
   .mt-24 { margin-top: calc(var(--spacing) * 24); }
   .mt-auto { margin-top: auto; }
+  .mr-1 { margin-right: calc(var(--spacing) * 1); }
   .mr-2 { margin-right: calc(var(--spacing) * 2); }
   .mb-1 { margin-bottom: calc(var(--spacing) * 1); }
+  .mb-1\.5 { margin-bottom: calc(var(--spacing) * 1.5); }
   .mb-3 { margin-bottom: calc(var(--spacing) * 3); }
   .-ml-4 { margin-left: calc(var(--spacing) * -4); }
   .ml-1 { margin-left: calc(var(--spacing) * 1); }
@@ -352,6 +354,7 @@
   .border-\(--color-border\) { border-color: var(--color-border); }
   .border-\[color\:var\(--border\)\] { border-color: var(--border); }
   .border-\[color\:var\(--butter\)\] { border-color: var(--butter); }
+  .border-\[color\:var\(--coral\)\] { border-color: var(--coral); }
   .border-border\/50 { border-color: var(--border); }
   @supports (color: color-mix(in lab, red, red)) {
   .border-border\/50 { border-color: color-mix(in oklab, var(--border) 50%, transparent); }
@@ -371,9 +374,11 @@
   .border-t-transparent { border-top-color: rgba(0, 0, 0, 0); }
   .border-l-transparent { border-left-color: rgba(0, 0, 0, 0); }
   .bg-\(--color-bg\) { background-color: var(--color-bg); }
+  .bg-\[\#FFE9EA\] { background-color: rgb(255, 233, 234); }
   .bg-\[color\:var\(--border\)\] { background-color: var(--border); }
   .bg-\[color\:var\(--butter\)\] { background-color: var(--butter); }
   .bg-\[color\:var\(--coral\)\] { background-color: var(--coral); }
+  .bg-\[color\:var\(--cream\)\] { background-color: var(--cream); }
   .bg-\[color\:var\(--cream\)\]\/80 { background-color: var(--cream); }
   @supports (color: color-mix(in lab, red, red)) {
   .bg-\[color\:var\(--cream\)\]\/80 { background-color: color-mix(in oklab, var(--cream) 80%, transparent); }
@@ -579,6 +584,8 @@
   .tracking-widest { --tw-tracking: var(--tracking-widest); letter-spacing: var(--tracking-widest); }
   .break-words { overflow-wrap: break-word; }
   .whitespace-nowrap { white-space: nowrap; }
+  .text-\[\#1F3A47\] { color: rgb(31, 58, 71); }
+  .text-\[\#5B4145\] { color: rgb(91, 65, 69); }
   .text-\[color\:var\(--coral\)\] { color: var(--coral); }
   .text-\[color\:var\(--coral\)\]\/50 { color: var(--coral); }
   @supports (color: color-mix(in lab, red, red)) {
@@ -641,6 +648,7 @@
   .duration-150 { --tw-duration: .15s; transition-duration: 0.15s; }
   .duration-200 { --tw-duration: .2s; transition-duration: 0.2s; }
   .duration-300 { --tw-duration: .3s; transition-duration: 0.3s; }
+  .duration-500 { --tw-duration: .5s; transition-duration: 0.5s; }
   .duration-1000 { --tw-duration: 1s; transition-duration: 1s; }
   .ease-in-out { --tw-ease: var(--ease-in-out); transition-timing-function: var(--ease-in-out); }
   .ease-linear { --tw-ease: linear; transition-timing-function: linear; }
@@ -649,6 +657,7 @@
   .select-none { user-select: none; }
   .zoom-in-95 { --tw-enter-scale: .95; }
   .\[--cell-size\:2rem\] { --cell-size: 2rem; }
+  .fade-in { --tw-enter-opacity: 0; }
   .slide-in-from-bottom-2 { --tw-enter-translate-y: calc(2*var(--spacing)); }
   .group-focus-within\/menu-item\:opacity-100:is(:where(.group\/menu-item):focus-within *) { opacity: 1; }
   @media (hover: hover) {
@@ -723,6 +732,9 @@
   .hover\:-translate-y-1:hover { --tw-translate-y: calc(var(--spacing) * -1); translate: var(--tw-translate-x) var(--tw-translate-y); }
 }
   @media (hover: hover) {
+  .hover\:bg-\[color\:var\(--coral\)\]:hover { background-color: var(--coral); }
+}
+  @media (hover: hover) {
   .hover\:bg-accent:hover { background-color: var(--accent); }
 }
   @media (hover: hover) {
@@ -778,6 +790,9 @@
 }
   @media (hover: hover) {
   .hover\:text-muted-foreground:hover { color: var(--muted-foreground); }
+}
+  @media (hover: hover) {
+  .hover\:text-white:hover { color: var(--color-white); }
 }
   @media (hover: hover) {
   .hover\:underline:hover { text-decoration-line: underline; }
@@ -929,6 +944,9 @@
 }
   @media (width >= 40rem) {
   .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0px, 1fr)); }
+}
+  @media (width >= 40rem) {
+  .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0px, 1fr)); }
 }
   @media (width >= 40rem) {
   .sm\:flex-row { flex-direction: row; }
@@ -1190,6 +1208,11 @@
 @property --tw-exit-translate-x { syntax: "*"; inherits: false; initial-value: 0; }
 @property --tw-exit-translate-y { syntax: "*"; inherits: false; initial-value: 0; }
 :root { --radius: 1rem; --cream: #fff8f0; --coral: #ff9aa2; --sky: #a8d8ea; --butter: #ffe5a0; --background: #fff8f0; --foreground: #333; --card: #fff; --card-foreground: #333; --popover: #fff; --popover-foreground: #333; --primary: #ff9aa2; --primary-foreground: #fff; --secondary: #a8d8ea; --secondary-foreground: #1f3a47; --muted: #fbefe4; --muted-foreground: #7a6e63; --accent: #ffe5a0; --accent-foreground: #5a4a1e; --destructive: #e4572e; --destructive-foreground: #fff; --border: #f3e4d6; --input: #f3e4d6; --ring: #ff9aa2; }
+@keyframes ds-blink { 
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0px); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
+.ds-dot { background: currentcolor; border-radius: 9999px; width: 6px; height: 6px; animation: 1.2s ease 0s infinite normal none running ds-blink; display: inline-block; }
 @property --tw-translate-x { syntax: "*"; inherits: false; initial-value: 0; }
 @property --tw-translate-y { syntax: "*"; inherits: false; initial-value: 0; }
 @property --tw-translate-z { syntax: "*"; inherits: false; initial-value: 0; }
@@ -1295,11 +1318,13 @@
   var LANDING = "<!--$--><div class=\"min-h-screen\" data-tsd-source=\"/src/routes/index.tsx:79:5\"><header class=\"sticky top-0 z-40 backdrop-blur bg-[color:var(--cream)]/80 border-b border-[color:var(--border)]\" data-tsd-source=\"/src/components/Header.tsx:5:5\"><div class=\"mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-1 sm:gap-2\" data-tsd-source=\"/src/components/Header.tsx:6:7\"><a data-tsd-source=\"/src/components/Header.tsx:7:9\" class=\"flex items-center gap-2 min-w-0 active\" data-status=\"active\" aria-current=\"page\" data-href=\"/\" style=\"cursor: pointer;\"><span class=\"inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--coral)] text-white text-base sm:text-lg\" data-tsd-source=\"/src/components/Header.tsx:8:11\">✦</span><span class=\"text-base sm:text-lg font-bold tracking-tight truncate\" style=\"font-family:var(--font-display)\" data-tsd-source=\"/src/components/Header.tsx:9:11\">DreamStories</span></a><nav class=\"flex items-center gap-1 sm:gap-2 shrink-0\" data-tsd-source=\"/src/components/Header.tsx:13:9\"><a data-tsd-source=\"/src/components/Header.tsx:14:11\" class=\"btn-ghost text-sm whitespace-nowrap !px-2.5 sm:!px-3\" data-href=\"/mypage\" style=\"cursor: pointer;\">マイページ</a><button class=\"btn-secondary text-sm whitespace-nowrap !py-2 !px-3 sm:!px-4\" data-tsd-source=\"/src/components/Header.tsx:15:11\">ログイン</button></nav></div></header><main data-tsd-source=\"/src/routes/index.tsx:81:7\"><section class=\"bg-gradient-to-b from-[color:var(--cream)] to-[#FFECEE]\" data-tsd-source=\"/src/routes/index.tsx:83:9\"><div class=\"mx-auto max-w-6xl px-4 py-14 md:py-20 grid items-center gap-10 md:grid-cols-2\" data-tsd-source=\"/src/routes/index.tsx:84:11\"><div class=\"text-center md:text-left\" data-tsd-source=\"/src/routes/index.tsx:85:13\"><span class=\"inline-flex items-center gap-2 rounded-full bg-white/80 border border-[color:var(--border)] px-4 py-1.5 text-xs font-semibold text-[color:var(--coral)] shadow-sm\" data-tsd-source=\"/src/routes/index.tsx:86:15\">🌸 AIパーソナライズ絵本</span><h1 class=\"mt-5\" style=\"font-family:var(--font-display)\" data-tsd-source=\"/src/routes/index.tsx:89:15\"><span class=\"block text-4xl md:text-6xl leading-tight tracking-tight\" data-tsd-source=\"/src/routes/index.tsx:90:17\">あなたのお子さまが</span><span class=\"block mt-1 text-2xl md:text-3xl leading-snug text-[color:var(--coral)]\" data-tsd-source=\"/src/routes/index.tsx:93:17\">主人公の絵本</span></h1><p class=\"mt-5 text-base md:text-lg text-[color:var(--muted-foreground)] max-w-md mx-auto md:mx-0\" data-tsd-source=\"/src/routes/index.tsx:97:15\">AIが12ページの世界にひとつだけの絵本を、たった5分で。</p><div class=\"mt-8\" data-tsd-source=\"/src/routes/index.tsx:100:15\"><a data-tsd-source=\"/src/routes/index.tsx:101:17\" class=\"btn-primary text-lg !px-8 !py-4 shadow-[var(--shadow-soft)]\" data-href=\"/create\" style=\"cursor: pointer;\">絵本を作る →</a></div></div><div data-tsd-source=\"/src/routes/index.tsx:110:13\"><img src=\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20480%22%20role%3D%22img%22%3E%0A%20%20%20%20%3Cdefs%3E%0A%20%20%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23A8D8EA%22%2F%3E%3Cstop%20offset%3D%220.55%22%20stop-color%3D%22%23FFE5A0%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FF9AA2%22%2F%3E%0A%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%20%20%3ClinearGradient%20id%3D%22pg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffffff%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FFF3E9%22%2F%3E%0A%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3C%2Fdefs%3E%0A%20%20%20%20%3Crect%20width%3D%22600%22%20height%3D%22480%22%20rx%3D%2228%22%20fill%3D%22url(%23bg)%22%20opacity%3D%220.35%22%2F%3E%0A%20%20%20%20%3Cg%20opacity%3D%220.9%22%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22105%22%20cy%3D%2290%22%20r%3D%2210%22%20fill%3D%22%23fff%22%2F%3E%3Ccircle%20cx%3D%22500%22%20cy%3D%2270%22%20r%3D%227%22%20fill%3D%22%23fff%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22530%22%20cy%3D%22150%22%20r%3D%2210%22%20fill%3D%22%23fff%22%2F%3E%3Ccircle%20cx%3D%2270%22%20cy%3D%22200%22%20r%3D%227%22%20fill%3D%22%23fff%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M470%20120%20l8%2016%2018%203%20-13%2013%203%2018%20-16%20-8%20-16%208%203%20-18%20-13%20-13%2018%20-3z%22%20fill%3D%22%23FFE5A0%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%0A%20%20%20%20%3Cg%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22205%22%20cy%3D%22175%22%20r%3D%2242%22%20fill%3D%22%23F7C9A6%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M163%20168%20a42%2042%200%200%201%2084%200%20a70%2040%200%200%200%20-84%200z%22%20fill%3D%22%236B4A3A%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M150%20330%20q55%20-95%20110%200z%22%20fill%3D%22%23FF9AA2%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%0A%20%20%20%20%3Cg%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22360%22%20cy%3D%22205%22%20r%3D%2234%22%20fill%3D%22%23F7C9A6%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M326%20200%20a34%2034%200%200%201%2068%200%20a55%2032%200%200%200%20-68%200z%22%20fill%3D%22%233A2E28%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M316%20345%20q44%20-80%2088%200z%22%20fill%3D%22%23A8D8EA%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%0A%20%20%20%20%3Cg%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M150%20345%20q140%20-55%20300%200%20v70%20q-150%20-50%20-300%200z%22%20fill%3D%22url(%23pg)%22%20stroke%3D%22%23F3E4D6%22%20stroke-width%3D%223%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M300%20320%20v100%22%20stroke%3D%22%23E7C9A6%22%20stroke-width%3D%224%22%2F%3E%0A%20%20%20%20%20%20%3Cg%20stroke%3D%22%23E9D9C6%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M185%20360%20h95%22%2F%3E%3Cpath%20d%3D%22M185%20378%20h95%22%2F%3E%3Cpath%20d%3D%22M185%20396%20h70%22%2F%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M320%20360%20h95%22%2F%3E%3Cpath%20d%3D%22M320%20378%20h95%22%2F%3E%3Cpath%20d%3D%22M345%20396%20h70%22%2F%3E%0A%20%20%20%20%20%20%3C%2Fg%3E%0A%20%20%20%20%3C%2Fg%3E%0A%20%20%3C%2Fsvg%3E\" alt=\"家族で絵本を読む様子\" class=\"w-full max-w-md mx-auto rounded-3xl shadow-[var(--shadow-soft)]\" data-tsd-source=\"/src/routes/index.tsx:111:15\"></div></div></section><section class=\"mx-auto max-w-6xl px-4 py-16\" data-tsd-source=\"/src/routes/index.tsx:121:9\"><h2 class=\"text-2xl md:text-3xl text-center\" data-tsd-source=\"/src/routes/index.tsx:122:11\">なぜDreamStoriesが選ばれるのか</h2><div class=\"mt-10 grid gap-5 md:grid-cols-3\" data-tsd-source=\"/src/routes/index.tsx:123:11\"><div class=\"card-soft text-center transition-transform hover:-translate-y-1\" data-tsd-source=\"/src/routes/index.tsx:125:15\"><div class=\"mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--butter)] text-3xl\" data-tsd-source=\"/src/routes/index.tsx:126:17\">🖋️</div><h3 class=\"mt-4 text-lg\" data-tsd-source=\"/src/routes/index.tsx:129:17\">AIが物語を紡ぐ</h3><p class=\"mt-2 text-sm text-[color:var(--muted-foreground)] leading-relaxed\" data-tsd-source=\"/src/routes/index.tsx:130:17\">GPT-4があなたのお子さまだけの物語を作成します。</p></div><div class=\"card-soft text-center transition-transform hover:-translate-y-1\" data-tsd-source=\"/src/routes/index.tsx:125:15\"><div class=\"mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--butter)] text-3xl\" data-tsd-source=\"/src/routes/index.tsx:126:17\">📖</div><h3 class=\"mt-4 text-lg\" data-tsd-source=\"/src/routes/index.tsx:129:17\">12ページのフルカラー絵本</h3><p class=\"mt-2 text-sm text-[color:var(--muted-foreground)] leading-relaxed\" data-tsd-source=\"/src/routes/index.tsx:130:17\">美しいイラストと共に、本格的な絵本仕様でお届けします。</p></div><div class=\"card-soft text-center transition-transform hover:-translate-y-1\" data-tsd-source=\"/src/routes/index.tsx:125:15\"><div class=\"mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--butter)] text-3xl\" data-tsd-source=\"/src/routes/index.tsx:126:17\">🎋</div><h3 class=\"mt-4 text-lg\" data-tsd-source=\"/src/routes/index.tsx:129:17\">日本文化がいっぱい</h3><p class=\"mt-2 text-sm text-[color:var(--muted-foreground)] leading-relaxed\" data-tsd-source=\"/src/routes/index.tsx:130:17\">桜・お祭り・招き猫など、日本らしい要素が物語を彩ります。</p></div></div></section><section class=\"bg-white/50 border-y border-[color:var(--border)]\" data-tsd-source=\"/src/routes/index.tsx:137:9\"><div class=\"mx-auto max-w-6xl px-4 py-16\" data-tsd-source=\"/src/routes/index.tsx:138:11\"><h2 class=\"text-2xl md:text-3xl text-center\" data-tsd-source=\"/src/routes/index.tsx:139:13\">3ステップで完成</h2><div class=\"mt-10 grid gap-8 md:grid-cols-3\" data-tsd-source=\"/src/routes/index.tsx:140:13\"><div class=\"relative text-center\" data-tsd-source=\"/src/routes/index.tsx:142:17\"><div class=\"mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--coral)] text-white text-3xl font-bold shadow-[var(--shadow-soft)]\" style=\"font-family:var(--font-display)\" data-tsd-source=\"/src/routes/index.tsx:143:19\">1</div><h3 class=\"mt-4 text-lg\" data-tsd-source=\"/src/routes/index.tsx:149:19\">お子さまの情報を入力</h3><p class=\"mt-2 text-sm text-[color:var(--muted-foreground)] leading-relaxed max-w-xs mx-auto\" data-tsd-source=\"/src/routes/index.tsx:150:19\">お名前・年齢・好きなものを、チャットで答えるだけ。</p><div class=\"hidden md:block absolute top-8 -right-4 text-2xl text-[color:var(--coral)]/50\" data-tsd-source=\"/src/routes/index.tsx:152:21\">→</div></div><div class=\"relative text-center\" data-tsd-source=\"/src/routes/index.tsx:142:17\"><div class=\"mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--coral)] text-white text-3xl font-bold shadow-[var(--shadow-soft)]\" style=\"font-family:var(--font-display)\" data-tsd-source=\"/src/routes/index.tsx:143:19\">2</div><h3 class=\"mt-4 text-lg\" data-tsd-source=\"/src/routes/index.tsx:149:19\">AIが5分で生成</h3><p class=\"mt-2 text-sm text-[color:var(--muted-foreground)] leading-relaxed max-w-xs mx-auto\" data-tsd-source=\"/src/routes/index.tsx:150:19\">物語とイラストを、AIが自動で作り上げます。</p><div class=\"hidden md:block absolute top-8 -right-4 text-2xl text-[color:var(--coral)]/50\" data-tsd-source=\"/src/routes/index.tsx:152:21\">→</div></div><div class=\"relative text-center\" data-tsd-source=\"/src/routes/index.tsx:142:17\"><div class=\"mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--coral)] text-white text-3xl font-bold shadow-[var(--shadow-soft)]\" style=\"font-family:var(--font-display)\" data-tsd-source=\"/src/routes/index.tsx:143:19\">3</div><h3 class=\"mt-4 text-lg\" data-tsd-source=\"/src/routes/index.tsx:149:19\">プレビュー → 購入</h3><p class=\"mt-2 text-sm text-[color:var(--muted-foreground)] leading-relaxed max-w-xs mx-auto\" data-tsd-source=\"/src/routes/index.tsx:150:19\">12ページを確認して、気に入ったら購入。</p></div></div></div></section><section class=\"mx-auto max-w-6xl px-4 py-16\" data-tsd-source=\"/src/routes/index.tsx:161:9\"><h2 class=\"text-2xl md:text-3xl text-center\" data-tsd-source=\"/src/routes/index.tsx:162:11\">実際に生成された絵本</h2><div class=\"mt-10 grid grid-cols-2 md:grid-cols-4 gap-4\" data-tsd-source=\"/src/routes/index.tsx:163:11\"><div class=\"card-soft !p-3\" data-tsd-source=\"/src/routes/index.tsx:165:15\"><div class=\"aspect-[3/4] rounded-xl bg-gradient-to-br from-[color:var(--sky)]/50 to-[color:var(--butter)]/50 flex items-center justify-center text-5xl\" data-tsd-source=\"/src/routes/index.tsx:166:17\">🚀</div><div class=\"mt-3 text-sm font-semibold text-center\" data-tsd-source=\"/src/routes/index.tsx:169:17\">たろうの宇宙大冒険</div></div><div class=\"card-soft !p-3\" data-tsd-source=\"/src/routes/index.tsx:165:15\"><div class=\"aspect-[3/4] rounded-xl bg-gradient-to-br from-[color:var(--butter)]/60 to-[color:var(--coral)]/40 flex items-center justify-center text-5xl\" data-tsd-source=\"/src/routes/index.tsx:166:17\">🦖</div><div class=\"mt-3 text-sm font-semibold text-center\" data-tsd-source=\"/src/routes/index.tsx:169:17\">はなこと恐竜の森</div></div><div class=\"card-soft !p-3\" data-tsd-source=\"/src/routes/index.tsx:165:15\"><div class=\"aspect-[3/4] rounded-xl bg-gradient-to-br from-[color:var(--sky)]/60 to-[color:var(--coral)]/30 flex items-center justify-center text-5xl\" data-tsd-source=\"/src/routes/index.tsx:166:17\">🐟</div><div class=\"mt-3 text-sm font-semibold text-center\" data-tsd-source=\"/src/routes/index.tsx:169:17\">みなとの海のたんけん</div></div><div class=\"card-soft !p-3\" data-tsd-source=\"/src/routes/index.tsx:165:15\"><div class=\"aspect-[3/4] rounded-xl bg-gradient-to-br from-[color:var(--coral)]/30 to-[color:var(--butter)]/60 flex items-center justify-center text-5xl\" data-tsd-source=\"/src/routes/index.tsx:166:17\">🌸</div><div class=\"mt-3 text-sm font-semibold text-center\" data-tsd-source=\"/src/routes/index.tsx:169:17\">さくらの魔法の国</div></div></div></section><section class=\"mx-auto max-w-3xl px-4 py-16\" data-tsd-source=\"/src/routes/index.tsx:176:9\"><h2 class=\"text-2xl md:text-3xl text-center\" data-tsd-source=\"/src/routes/index.tsx:177:11\">よくあるご質問</h2><div class=\"mt-10 space-y-3\" data-tsd-source=\"/src/routes/index.tsx:178:11\"><div class=\"card-soft !p-0 overflow-hidden\" data-tsd-source=\"/src/routes/index.tsx:180:15\"><button class=\"w-full text-left px-5 py-4 flex items-center justify-between gap-4\" aria-expanded=\"true\" data-tsd-source=\"/src/routes/index.tsx:181:17\"><span class=\"font-semibold\" data-tsd-source=\"/src/routes/index.tsx:186:19\">AIが作った絵本の著作権は誰のものですか？</span><span class=\"text-[color:var(--coral)] text-xl shrink-0\" data-tsd-source=\"/src/routes/index.tsx:187:19\">−</span></button><div class=\"px-5 pb-5 text-sm text-[color:var(--muted-foreground)] leading-relaxed\" data-tsd-source=\"/src/routes/index.tsx:190:19\">生成された絵本の内容は、購入されたお客さまが個人利用の範囲で自由にお楽しみいただけます。詳細は利用規約をご確認ください。</div></div><div class=\"card-soft !p-0 overflow-hidden\" data-tsd-source=\"/src/routes/index.tsx:180:15\"><button class=\"w-full text-left px-5 py-4 flex items-center justify-between gap-4\" aria-expanded=\"false\" data-tsd-source=\"/src/routes/index.tsx:181:17\"><span class=\"font-semibold\" data-tsd-source=\"/src/routes/index.tsx:186:19\">何歳の子供に向いていますか？</span><span class=\"text-[color:var(--coral)] text-xl shrink-0\" data-tsd-source=\"/src/routes/index.tsx:187:19\">+</span></button></div><div class=\"card-soft !p-0 overflow-hidden\" data-tsd-source=\"/src/routes/index.tsx:180:15\"><button class=\"w-full text-left px-5 py-4 flex items-center justify-between gap-4\" aria-expanded=\"false\" data-tsd-source=\"/src/routes/index.tsx:181:17\"><span class=\"font-semibold\" data-tsd-source=\"/src/routes/index.tsx:186:19\">何回作り直せますか？</span><span class=\"text-[color:var(--coral)] text-xl shrink-0\" data-tsd-source=\"/src/routes/index.tsx:187:19\">+</span></button></div><div class=\"card-soft !p-0 overflow-hidden\" data-tsd-source=\"/src/routes/index.tsx:180:15\"><button class=\"w-full text-left px-5 py-4 flex items-center justify-between gap-4\" aria-expanded=\"false\" data-tsd-source=\"/src/routes/index.tsx:181:17\"><span class=\"font-semibold\" data-tsd-source=\"/src/routes/index.tsx:186:19\">データの安全性は？</span><span class=\"text-[color:var(--coral)] text-xl shrink-0\" data-tsd-source=\"/src/routes/index.tsx:187:19\">+</span></button></div></div></section><section class=\"mx-auto max-w-4xl px-4 pb-16\" data-tsd-source=\"/src/routes/index.tsx:198:9\"><div class=\"rounded-3xl bg-gradient-to-r from-[color:var(--coral)] to-[#ffb3a7] p-10 md:p-14 text-center text-white shadow-[var(--shadow-soft)]\" data-tsd-source=\"/src/routes/index.tsx:199:11\"><h2 class=\"text-2xl md:text-3xl text-white\" style=\"font-family:var(--font-display)\" data-tsd-source=\"/src/routes/index.tsx:200:13\">あなたのお子さまの物語を、今すぐ始めよう</h2><p class=\"mt-3 text-white/90 text-sm\" data-tsd-source=\"/src/routes/index.tsx:203:13\">3分の入力で、世界にひとつの絵本ができあがります。</p><a data-tsd-source=\"/src/routes/index.tsx:204:13\" class=\"mt-7 inline-flex items-center gap-2 rounded-2xl bg-white text-[color:var(--coral)] px-8 py-4 font-bold shadow-lg hover:-translate-y-0.5 transition\" data-href=\"/create\" style=\"cursor: pointer;\">絵本を作る →</a></div></section></main><footer class=\"mt-24 border-t border-[color:var(--border)] bg-white/60\" data-tsd-source=\"/src/components/Footer.tsx:18:5\"><div class=\"mx-auto max-w-6xl px-4 py-12 grid gap-8 sm:grid-cols-2 md:grid-cols-4 text-sm text-[color:var(--muted-foreground)]\" data-tsd-source=\"/src/components/Footer.tsx:19:7\"><div data-tsd-source=\"/src/components/Footer.tsx:21:9\"><div class=\"flex items-center gap-2\" data-tsd-source=\"/src/components/Footer.tsx:22:11\"><span class=\"inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[color:var(--coral)] text-white text-base\" data-tsd-source=\"/src/components/Footer.tsx:23:13\">✦</span><span class=\"text-base font-bold text-[color:var(--foreground)]\" style=\"font-family:var(--font-display)\" data-tsd-source=\"/src/components/Footer.tsx:24:13\">DreamStories</span></div><p class=\"mt-3 leading-relaxed\" data-tsd-source=\"/src/components/Footer.tsx:28:11\">あなたのお子さまが主人公の、世界にひとつだけの絵本。AIが物語とイラストを紡ぎます。</p></div><div class=\"flex flex-col gap-2\" data-tsd-source=\"/src/components/Footer.tsx:35:11\"><div class=\"font-bold text-[color:var(--foreground)]\" data-tsd-source=\"/src/components/Footer.tsx:36:13\">サービス</div><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">絵本の作り方</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">料金</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">サンプル</a></div><div class=\"flex flex-col gap-2\" data-tsd-source=\"/src/components/Footer.tsx:35:11\"><div class=\"font-bold text-[color:var(--foreground)]\" data-tsd-source=\"/src/components/Footer.tsx:36:13\">会社情報</div><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">会社概要</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">お問い合わせ</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">採用情報</a></div><div class=\"flex flex-col gap-2\" data-tsd-source=\"/src/components/Footer.tsx:35:11\"><div class=\"font-bold text-[color:var(--foreground)]\" data-tsd-source=\"/src/components/Footer.tsx:36:13\">法的</div><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">利用規約</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">プライバシーポリシー</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">特定商取引法に基づく表記</a></div></div><div class=\"border-t border-[color:var(--border)]\" data-tsd-source=\"/src/components/Footer.tsx:45:7\"><div class=\"mx-auto max-w-6xl px-4 py-4 text-xs text-[color:var(--muted-foreground)] text-center\" data-tsd-source=\"/src/components/Footer.tsx:46:9\">© <!-- -->2026<!-- --> DreamStories Japan. All rights reserved.</div></div></footer></div><!--/$-->";
   var MYPAGE = "<!--$--><div class=\"min-h-screen flex flex-col\" data-tsd-source=\"/src/routes/mypage.tsx:17:5\"><header class=\"sticky top-0 z-40 backdrop-blur bg-[color:var(--cream)]/80 border-b border-[color:var(--border)]\" data-tsd-source=\"/src/components/Header.tsx:5:5\"><div class=\"mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-1 sm:gap-2\" data-tsd-source=\"/src/components/Header.tsx:6:7\"><a data-tsd-source=\"/src/components/Header.tsx:7:9\" class=\"flex items-center gap-2 min-w-0\" data-href=\"/\" style=\"cursor: pointer;\"><span class=\"inline-flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-2xl bg-[color:var(--coral)] text-white text-base sm:text-lg\" data-tsd-source=\"/src/components/Header.tsx:8:11\">✦</span><span class=\"text-base sm:text-lg font-bold tracking-tight truncate\" style=\"font-family:var(--font-display)\" data-tsd-source=\"/src/components/Header.tsx:9:11\">DreamStories</span></a><nav class=\"flex items-center gap-1 sm:gap-2 shrink-0\" data-tsd-source=\"/src/components/Header.tsx:13:9\"><a data-tsd-source=\"/src/components/Header.tsx:14:11\" class=\"btn-ghost text-sm whitespace-nowrap !px-2.5 sm:!px-3 active\" data-status=\"active\" aria-current=\"page\" data-href=\"/mypage\" style=\"cursor: pointer;\">マイページ</a><button class=\"btn-secondary text-sm whitespace-nowrap !py-2 !px-3 sm:!px-4\" data-tsd-source=\"/src/components/Header.tsx:15:11\">ログイン</button></nav></div></header><main class=\"flex-1 mx-auto w-full max-w-6xl px-4 py-8\" data-tsd-source=\"/src/routes/mypage.tsx:19:7\"><div class=\"flex items-end justify-between gap-4 flex-wrap\" data-tsd-source=\"/src/routes/mypage.tsx:20:9\"><div data-tsd-source=\"/src/routes/mypage.tsx:21:11\"><h1 class=\"text-2xl md:text-3xl\" data-tsd-source=\"/src/routes/mypage.tsx:22:13\">マイページ</h1><p class=\"mt-1 text-sm text-[color:var(--muted-foreground)]\" data-tsd-source=\"/src/routes/mypage.tsx:23:13\">あなたの絵本コレクション</p></div><a data-tsd-source=\"/src/routes/mypage.tsx:25:11\" class=\"btn-primary !py-3 !px-5 text-sm\" data-href=\"/create\" style=\"cursor: pointer;\">新しい絵本を作る</a></div><div class=\"mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3\" data-tsd-source=\"/src/routes/mypage.tsx:28:9\"><div class=\"card-soft flex flex-col\" data-tsd-source=\"/src/routes/mypage.tsx:30:13\"><div class=\"relative aspect-[3/4] rounded-2xl bg-gradient-to-br from-[color:var(--sky)]/40 via-[color:var(--butter)]/40 to-[color:var(--coral)]/40 flex items-center justify-center text-6xl\" data-tsd-source=\"/src/routes/mypage.tsx:31:15\">🌳</div><h3 class=\"mt-4 text-base\" data-tsd-source=\"/src/routes/mypage.tsx:37:15\">ゆうきくんの森の冒険</h3><p class=\"text-xs text-[color:var(--muted-foreground)]\" data-tsd-source=\"/src/routes/mypage.tsx:38:15\">購入日: 2025-07-15</p><div class=\"mt-4\" data-tsd-source=\"/src/routes/mypage.tsx:41:15\"><a data-tsd-source=\"/src/routes/mypage.tsx:43:19\" class=\"btn-secondary w-full text-sm\" data-href=\"/preview/demo\" style=\"cursor: pointer;\">開く</a></div></div><div class=\"card-soft flex flex-col\" data-tsd-source=\"/src/routes/mypage.tsx:30:13\"><div class=\"relative aspect-[3/4] rounded-2xl bg-gradient-to-br from-[color:var(--sky)]/40 via-[color:var(--butter)]/40 to-[color:var(--coral)]/40 flex items-center justify-center text-6xl\" data-tsd-source=\"/src/routes/mypage.tsx:31:15\">⭐</div><h3 class=\"mt-4 text-base\" data-tsd-source=\"/src/routes/mypage.tsx:37:15\">さくらちゃんとお星さま</h3><p class=\"text-xs text-[color:var(--muted-foreground)]\" data-tsd-source=\"/src/routes/mypage.tsx:38:15\">購入日: 2025-06-30</p><div class=\"mt-4\" data-tsd-source=\"/src/routes/mypage.tsx:41:15\"><a data-tsd-source=\"/src/routes/mypage.tsx:43:19\" class=\"btn-secondary w-full text-sm\" data-href=\"/preview/b2\" style=\"cursor: pointer;\">開く</a></div></div><div class=\"card-soft flex flex-col\" data-tsd-source=\"/src/routes/mypage.tsx:30:13\"><div class=\"relative aspect-[3/4] rounded-2xl bg-gradient-to-br from-[color:var(--sky)]/40 via-[color:var(--butter)]/40 to-[color:var(--coral)]/40 flex items-center justify-center text-6xl\" data-tsd-source=\"/src/routes/mypage.tsx:31:15\">🌊<span class=\"absolute top-3 right-3 rounded-full bg-[color:var(--coral)] text-white text-[11px] font-bold px-2.5 py-1 shadow\" data-tsd-source=\"/src/routes/mypage.tsx:34:19\">未購入</span></div><h3 class=\"mt-4 text-base\" data-tsd-source=\"/src/routes/mypage.tsx:37:15\">ひろとの海の大冒険</h3><p class=\"text-xs text-[color:var(--muted-foreground)]\" data-tsd-source=\"/src/routes/mypage.tsx:38:15\">まだ購入されていません</p><div class=\"mt-4\" data-tsd-source=\"/src/routes/mypage.tsx:41:15\"><a data-tsd-source=\"/src/routes/mypage.tsx:45:19\" class=\"btn-primary w-full text-sm\" data-href=\"/checkout/b3\" style=\"cursor: pointer;\">購入する</a></div></div></div></main><footer class=\"mt-24 border-t border-[color:var(--border)] bg-white/60\" data-tsd-source=\"/src/components/Footer.tsx:18:5\"><div class=\"mx-auto max-w-6xl px-4 py-12 grid gap-8 sm:grid-cols-2 md:grid-cols-4 text-sm text-[color:var(--muted-foreground)]\" data-tsd-source=\"/src/components/Footer.tsx:19:7\"><div data-tsd-source=\"/src/components/Footer.tsx:21:9\"><div class=\"flex items-center gap-2\" data-tsd-source=\"/src/components/Footer.tsx:22:11\"><span class=\"inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[color:var(--coral)] text-white text-base\" data-tsd-source=\"/src/components/Footer.tsx:23:13\">✦</span><span class=\"text-base font-bold text-[color:var(--foreground)]\" style=\"font-family:var(--font-display)\" data-tsd-source=\"/src/components/Footer.tsx:24:13\">DreamStories</span></div><p class=\"mt-3 leading-relaxed\" data-tsd-source=\"/src/components/Footer.tsx:28:11\">あなたのお子さまが主人公の、世界にひとつだけの絵本。AIが物語とイラストを紡ぎます。</p></div><div class=\"flex flex-col gap-2\" data-tsd-source=\"/src/components/Footer.tsx:35:11\"><div class=\"font-bold text-[color:var(--foreground)]\" data-tsd-source=\"/src/components/Footer.tsx:36:13\">サービス</div><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">絵本の作り方</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">料金</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">サンプル</a></div><div class=\"flex flex-col gap-2\" data-tsd-source=\"/src/components/Footer.tsx:35:11\"><div class=\"font-bold text-[color:var(--foreground)]\" data-tsd-source=\"/src/components/Footer.tsx:36:13\">会社情報</div><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">会社概要</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">お問い合わせ</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">採用情報</a></div><div class=\"flex flex-col gap-2\" data-tsd-source=\"/src/components/Footer.tsx:35:11\"><div class=\"font-bold text-[color:var(--foreground)]\" data-tsd-source=\"/src/components/Footer.tsx:36:13\">法的</div><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">利用規約</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">プライバシーポリシー</a><a class=\"hover:text-[color:var(--coral)] transition-colors\" data-tsd-source=\"/src/components/Footer.tsx:38:15\" data-href=\"#\" style=\"cursor: pointer;\">特定商取引法に基づく表記</a></div></div><div class=\"border-t border-[color:var(--border)]\" data-tsd-source=\"/src/components/Footer.tsx:45:7\"><div class=\"mx-auto max-w-6xl px-4 py-4 text-xs text-[color:var(--muted-foreground)] text-center\" data-tsd-source=\"/src/components/Footer.tsx:46:9\">© <!-- -->2026<!-- --> DreamStories Japan. All rights reserved.</div></div></footer></div><!--/$-->";
 
-  var QUESTIONS = [
-    "こんにちは！お子さまの絵本を作りましょう。まず、お子さまのお名前を教えてください。",
-    "ありがとうございます！お子さまの年齢を教えてください。（例：5歳）",
-    "素敵ですね。お子さまが好きなものや興味のあることを教えてください。（例：恐竜、電車、お姫さま）",
-    "最後に、どんなテーマの絵本がいいですか？（例：冒険、友情、魔法）"
+  var WELCOME = "DreamStoriesへようこそ！お子さまの絵本を作りましょう。まず、お子さまのお名前を教えてください。";
+  var THEMES = [
+    { emoji:"🚀", label:"宇宙冒険" },
+    { emoji:"🦖", label:"恐竜の世界" },
+    { emoji:"🐟", label:"海の探検" },
+    { emoji:"🌲", label:"魔法の森" },
+    { emoji:"🎋", label:"お祭り冒険" }
   ];
   var PAGES = [
     {emoji:"🌅",text:"ある日、ゆうきくんは不思議な森へと出かけました。"},
@@ -1336,44 +1361,98 @@
       + '</nav></div></header>';
   }
 
+  // Simple header (logo + back) for the onboard chat.
+  function simpleHeader(){
+    return '<header class="sticky top-0 z-40 backdrop-blur bg-[color:var(--cream)]/80 border-b border-[color:var(--border)]">'
+      + '<div class="mx-auto max-w-2xl px-4 py-3 flex items-center gap-3">'
+      + '<a data-href="/" class="h-9 w-9 shrink-0 rounded-full border border-[color:var(--border)] bg-white flex items-center justify-center text-[color:var(--muted-foreground)]" style="cursor:pointer" aria-label="戻る">←</a>'
+      + '<a data-href="/" class="flex items-center gap-2" style="cursor:pointer">'
+      + '<span class="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[color:var(--coral)] text-white text-base">✦</span>'
+      + '<span class="text-base font-bold tracking-tight" style="font-family:var(--font-display)">DreamStories</span></a>'
+      + '</div></header>';
+  }
+
   // ---- Screen: create (chat) ----
-  var chat = { messages: [], step: 0 };
+  var TOTAL = 4;
   function renderCreate(){
-    chat = { messages: [{ role:"ai", text: QUESTIONS[0] }], step: 0 };
-    root.innerHTML = header()
-      + '<div class="min-h-screen flex flex-col"><main class="flex-1 mx-auto w-full max-w-2xl px-4 py-6 flex flex-col">'
+    var step = 0, mode = "text", typing = false;
+    var info = { name:"", age:"" };
+    var placeholders = ["お名前を入力...", "年齢を入力...", "好きなものを入力..."];
+
+    root.innerHTML = simpleHeader()
+      + '<div class="min-h-screen flex flex-col bg-[color:var(--cream)]">'
+      + '<div class="mx-auto w-full max-w-2xl px-4 pt-3">'
+      + '<div class="flex items-center justify-between text-xs text-[color:var(--muted-foreground)] mb-1.5"><span>お子さまについて教えてください</span><span id="chatProg" class="font-semibold text-[color:var(--coral)] tabular-nums">1 / 4</span></div>'
+      + '<div class="h-1.5 w-full rounded-full bg-[color:var(--muted)] overflow-hidden"><div id="chatBar" class="h-full rounded-full bg-[color:var(--coral)] transition-all duration-500" style="width:25%"></div></div></div>'
+      + '<main class="flex-1 mx-auto w-full max-w-2xl px-4 py-4 flex flex-col min-h-0">'
       + '<div id="chatScroll" class="flex-1 overflow-y-auto space-y-3 pb-4"></div>'
-      + '<form id="chatForm" class="sticky bottom-2 flex gap-2 bg-[color:var(--cream)]/90 backdrop-blur pt-2">'
-      + '<input id="chatInput" placeholder="メッセージを入力..." class="flex-1 rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[color:var(--coral)]/40" />'
-      + '<button type="submit" class="btn-primary !py-3 !px-5">送信</button></form></main></div>';
+      + '<div id="chatDock" class="sticky bottom-2 bg-[color:var(--cream)]/90 backdrop-blur pt-2"></div>'
+      + '</main></div>';
+
     var scroll = document.getElementById("chatScroll");
+    var dock = document.getElementById("chatDock");
+    var prog = document.getElementById("chatProg"), bar = document.getElementById("chatBar");
+
+    function setProgress(){ var p = Math.min(step+1, TOTAL); prog.textContent = p + " / " + TOTAL; bar.style.width = (p/TOTAL*100) + "%"; }
+    function scrollDown(){ scroll.scrollTo({ top: scroll.scrollHeight, behavior:"smooth" }); }
+
     function bubble(m){
       var wrap = document.createElement("div");
-      wrap.className = "flex " + (m.role==="user"?"justify-end":"justify-start") + " animate-in slide-in-from-bottom-2 duration-300";
+      wrap.className = "flex " + (m.role==="user"?"justify-end":"justify-start") + " animate-in fade-in slide-in-from-bottom-2 duration-300";
       wrap.innerHTML = (m.role==="ai" ? '<div class="mr-2 h-9 w-9 shrink-0 rounded-full bg-[color:var(--butter)] flex items-center justify-center">🧚</div>' : '')
-        + '<div class="max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ' + (m.role==="user" ? 'bg-[color:var(--coral)] text-white rounded-br-md' : 'bg-white border border-[color:var(--border)] rounded-bl-md') + '">' + esc(m.text) + '</div>';
-      scroll.appendChild(wrap);
-      scroll.scrollTo({ top: scroll.scrollHeight, behavior: "smooth" });
+        + '<div class="max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ' + (m.role==="user" ? 'bg-[color:var(--sky)] text-[#1F3A47] rounded-br-md' : 'bg-[#FFE9EA] text-[#5B4145] rounded-bl-md') + '">' + esc(m.text) + '</div>';
+      scroll.appendChild(wrap); scrollDown();
     }
-    chat.messages.forEach(bubble);
-    var input = document.getElementById("chatInput");
-    input.focus();
-    document.getElementById("chatForm").addEventListener("submit", function(e){
-      e.preventDefault();
-      var v = input.value.trim();
-      if(!v) return;
-      bubble({ role:"user", text:v });
-      var nextStep = chat.step + 1;
-      if(nextStep < QUESTIONS.length){
-        chat.step = nextStep;
-        setTimeout(function(){ bubble({ role:"ai", text: QUESTIONS[nextStep] }); }, 350);
+    function showTyping(on){
+      var ex = document.getElementById("typingRow");
+      if(on){
+        if(ex) return;
+        var row = document.createElement("div");
+        row.id = "typingRow";
+        row.className = "flex justify-start animate-in fade-in duration-200";
+        row.innerHTML = '<div class="mr-2 h-9 w-9 shrink-0 rounded-full bg-[color:var(--butter)] flex items-center justify-center">🧚</div>'
+          + '<div class="rounded-2xl rounded-bl-md bg-[#FFE9EA] text-[color:var(--coral)] px-4 py-4 shadow-sm flex items-center gap-1.5">'
+          + '<span class="ds-dot"></span><span class="ds-dot" style="animation-delay:.2s"></span><span class="ds-dot" style="animation-delay:.4s"></span></div>';
+        scroll.appendChild(row); scrollDown();
+      } else if(ex){ ex.remove(); }
+    }
+    function aiSay(text, after){
+      typing = true; renderDock(); showTyping(true);
+      timers.push(setTimeout(function(){ typing = false; showTyping(false); bubble({role:"ai",text:text}); renderDock(); if(after) after(); }, 900));
+    }
+
+    function renderDock(){
+      if(mode === "theme"){
+        dock.innerHTML = '<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">'
+          + THEMES.map(function(t){ return '<button data-theme="'+t.label+'" data-emoji="'+t.emoji+'"'+(typing?' disabled':'')+' class="rounded-2xl border-2 border-[color:var(--coral)] bg-white px-3 py-3 text-sm font-semibold text-[color:var(--coral)] hover:bg-[color:var(--coral)] hover:text-white transition-colors disabled:opacity-50"><span class="text-lg mr-1">'+t.emoji+'</span>'+t.label+'</button>'; }).join("")
+          + '</div>';
+      } else if(mode === "done"){
+        dock.innerHTML = '<div class="text-center text-sm text-[color:var(--muted-foreground)] py-3">絵本の生成を開始しています...</div>';
       } else {
-        setTimeout(function(){ bubble({ role:"ai", text:"ありがとうございます！絵本の作成を開始します..." }); }, 350);
-        timers.push(setTimeout(function(){ navigate("/generating"); }, 1400));
+        dock.innerHTML = '<form id="chatForm" class="flex gap-2"><input id="chatInput" placeholder="'+(placeholders[step]||"メッセージを入力...")+'"'+(typing?' disabled':'')+' class="flex-1 rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[color:var(--coral)]/40 disabled:opacity-60" /><button type="submit"'+(typing?' disabled':'')+' class="btn-primary !py-3 !px-5 disabled:opacity-50">送信</button></form>';
+        var form = document.getElementById("chatForm"), input = document.getElementById("chatInput");
+        if(input && !typing) input.focus();
+        if(form) form.addEventListener("submit", function(e){ e.preventDefault(); sendText(input.value); });
       }
-      input.value = "";
-      input.focus();
-    });
+    }
+    function sendText(raw){
+      var v = (raw||"").trim();
+      if(!v || mode!=="text" || typing) return;
+      bubble({role:"user",text:v});
+      if(step===0){ info.name=v; step=1; setProgress(); aiSay(info.name+"ちゃんですね！おいくつですか？"); }
+      else if(step===1){ info.age=v; step=2; setProgress(); aiSay(info.name+"ちゃんは"+v+"歳ですね。普段、どんなことが好きですか？"); }
+      else if(step===2){ step=3; setProgress(); aiSay("素敵ですね！以下のテーマから選んでいただけますか？", function(){ mode="theme"; renderDock(); }); }
+    }
+    dock._choose = function(label, emoji){
+      if(mode!=="theme" || typing) return;
+      bubble({role:"user",text:emoji+" "+label});
+      mode = "done"; renderDock();
+      aiSay("ありがとうございます！"+info.name+"ちゃんの"+label+"の絵本を作りますね。生成を開始します...", function(){ timers.push(setTimeout(function(){ navigate("/generating"); }, 3000)); });
+    };
+
+    setProgress();
+    renderDock();
+    aiSay(WELCOME);
   }
 
   // ---- Screen: generating ----
@@ -1503,6 +1582,12 @@
 
   function normalize(href){ try{ href = new URL(href, location.origin).pathname; }catch(e){} if(href.length>1 && href.endsWith("/")) href = href.slice(0,-1); return href; }
   document.addEventListener("click", function(e){
+    var th = e.target.closest ? e.target.closest("[data-theme]") : null;
+    if(th){
+      var dock = document.getElementById("chatDock");
+      if(dock && dock._choose) dock._choose(th.getAttribute("data-theme"), th.getAttribute("data-emoji"));
+      return;
+    }
     var t = e.target.closest ? e.target.closest("[data-toast]") : null;
     if(t){ toast(t.getAttribute("data-toast")); return; }
     var el = e.target.closest ? e.target.closest("[data-href]") : null;

@@ -129,16 +129,62 @@ function mockBook(params: ExtractedParams | null): GenerateStoryResponse {
 
 /**
  * オンボードチャット（Edge Function: dify-chat）
- * WEEK5: POST `${API_BASE}/dify-chat` に差し替え。
- * ※現在チャット画面はハードコード対話のためこの関数は未使用。
- *   差し替え時は create.tsx の台本ロジックをこの関数呼び出しに置き換える。
+ * チャット画面(create.tsx)はすでにこの関数経由で対話しています。
+ * WEEK5: 下のMOCKブロックを
+ *   const r = await fetch(`${API_BASE}/dify-chat`, {
+ *     method: "POST",
+ *     headers: { "Content-Type": "application/json", Authorization: `Bearer ${ログイントークン}` },
+ *     body: JSON.stringify(req),
+ *   });
+ *   return await r.json();
+ * に置き換えるだけ。画面側の修正は不要です。
  */
+type MockChatState = { step: number; name?: string; age?: string; interests?: string };
+const encodeChatState = (s: MockChatState) => "mock:" + btoa(unescape(encodeURIComponent(JSON.stringify(s))));
+const decodeChatState = (id: string | null): MockChatState => {
+  if (!id || !id.startsWith("mock:")) return { step: 0 };
+  try { return JSON.parse(decodeURIComponent(escape(atob(id.slice(5))))) as MockChatState; } catch { return { step: 0 }; }
+};
+
 export async function difyChat(req: DifyChatRequest): Promise<DifyChatResponse> {
-  // --- MOCK ---
+  // --- MOCK: Difyチャットフローの代役（台本対話）。会話状態はconversation_idに載せて往復 ---
+  await new Promise((r) => setTimeout(r, 900)); // タイピング演出の間
+  const st = decodeChatState(req.conversation_id);
+  const msg = req.message.trim();
+  if (st.step === 0) {
+    return {
+      answer: `${msg}ちゃんですね！おいくつですか？`,
+      conversation_id: encodeChatState({ step: 1, name: msg }),
+      is_complete: false,
+    };
+  }
+  if (st.step === 1) {
+    return {
+      answer: `${st.name}ちゃんは${msg}歳ですね。普段、どんなことが好きですか？`,
+      conversation_id: encodeChatState({ ...st, step: 2, age: msg }),
+      is_complete: false,
+    };
+  }
+  if (st.step === 2) {
+    return {
+      answer: "素敵ですね！以下のテーマから選んでいただけますか？",
+      conversation_id: encodeChatState({ ...st, step: 3, interests: msg }),
+      is_complete: false,
+    };
+  }
+  // step 3: テーマ（例：「🚀 宇宙冒険」）→ 対話完了、収集パラメータを返す
+  const theme = msg.split(/\s+/).pop() ?? msg;
   return {
-    answer: `（モック応答）${req.message}`,
-    conversation_id: req.conversation_id ?? "mock-conversation",
-    is_complete: false,
+    answer: `ありがとうございます！${st.name}ちゃんの${theme}の絵本を作りますね。右の画面で様子が見られます📖`,
+    conversation_id: req.conversation_id ?? "",
+    is_complete: true,
+    extracted_params: {
+      child_name: st.name ?? "",
+      age: normalizeAge(st.age ?? ""),
+      interests: st.interests ?? "",
+      theme,
+      language: "ja",
+    },
   };
 }
 
@@ -169,6 +215,12 @@ export function generateStory(
       const perTick = (STAGES[si].to - prevTo) / (STAGES[si].ms / TICK);
       p = Math.min(100, p + perTick * (0.3 + Math.random() * 1.5));
       onProgress?.({ percent: Math.min(100, Math.round(p)), stage: STAGES[si].stage });
+      // テスト用トリガー：お名前に「エラー」を含めると生成失敗を疑似再現できる
+      if (p >= 35 && params?.child_name?.includes("エラー")) {
+        clearInterval(id);
+        resolve({ success: false, book_id: "", title: "", pages: [], error: "生成に失敗しました" });
+        return;
+      }
       if (p >= 100) {
         clearInterval(id);
         const book = mockBook(params);

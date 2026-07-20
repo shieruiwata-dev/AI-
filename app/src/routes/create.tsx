@@ -3,12 +3,13 @@ import { useEffect, useRef, useState } from "react";
 import { BookCover } from "@/components/BookCover";
 import { FlipBook } from "@/components/FlipBook";
 import {
-  normalizeAge,
+  difyChat,
   saveExtractedParams,
   generateStory,
   regeneratePage,
   requestAdjustment,
   updateBookTitle,
+  type ExtractedParams,
   type GenerateProgress,
   type GenerateStoryResponse,
 } from "@/lib/api";
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/create")({
 });
 
 type Msg = { role: "ai" | "user"; text: string };
-type Phase = "chat" | "generating" | "ready";
+type Phase = "chat" | "generating" | "ready" | "error";
 
 const THEMES = [
   { emoji: "🚀", label: "宇宙冒険" },
@@ -28,6 +29,8 @@ const THEMES = [
   { emoji: "🎋", label: "お祭り冒険" },
 ];
 const TOTAL = 4;
+
+const WELCOME = "DreamStoriesへようこそ！お子さまの絵本を作りましょう。まず、お子さまのお名前を教えてください。";
 
 const STAGE_TEXT: Record<GenerateProgress["stage"], string> = {
   imagining: "お子さまの世界を想像しています…",
@@ -44,6 +47,7 @@ function CreatePage() {
   const [mode, setMode] = useState<"text" | "theme" | "locked" | "adjust">("text");
   const [input, setInput] = useState("");
   const data = useRef({ name: "", age: "", interests: "", themeEmoji: "" });
+  const convId = useRef<string | null>(null); // dify-chatの会話ID（資料Week5仕様）
 
   // ---- studio state ----
   const [phase, setPhase] = useState<Phase>("chat");
@@ -86,11 +90,35 @@ function CreatePage() {
 
   // Kick off the conversation.
   useEffect(() => {
-    aiSay("DreamStoriesへようこそ！お子さまの絵本を作りましょう。まず、お子さまのお名前を教えてください。");
+    aiSay(WELCOME);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ---- onboarding flow ----
+  // ---- onboarding flow（対話はすべて dify-chat API 経由。WEEK5はapi.tsの差し替えのみ） ----
+  const askDify = async (message: string) => {
+    setTyping(true);
+    try {
+      const res = await difyChat({ message, conversation_id: convId.current });
+      convId.current = res.conversation_id;
+      setTyping(false);
+      pushAi(res.answer);
+      if (res.is_complete && res.extracted_params) {
+        onChatComplete(res.extracted_params);
+        return;
+      }
+      // UI進行（進捗バー・入力欄の切り替え。対話の中身はAPI側が担う）
+      setStep((s) => {
+        const ns = Math.min(s + 1, 3);
+        if (ns === 3) setMode("theme");
+        return ns;
+      });
+    } catch (e) {
+      console.error(e);
+      setTyping(false);
+      pushAi("通信に失敗しました。もう一度お試しください。");
+    }
+  };
+
   const sendText = () => {
     const v = input.trim();
     if (!v || typing) return;
@@ -98,59 +126,47 @@ function CreatePage() {
     if (mode !== "text") return;
     pushUser(v);
     setInput("");
-    if (step === 0) {
-      data.current.name = v;
-      setStep(1);
-      aiSay(`${v}ちゃんですね！おいくつですか？`);
-    } else if (step === 1) {
-      data.current.age = v;
-      setStep(2);
-      aiSay(`${data.current.name}ちゃんは${v}歳ですね。普段、どんなことが好きですか？`);
-    } else if (step === 2) {
-      data.current.interests = v;
-      setStep(3);
-      aiSay("素敵ですね！以下のテーマから選んでいただけますか？", () => setMode("theme"));
-    }
+    // 右ペインの下書きカード表示用（対話の進行とは独立）
+    if (step === 0) data.current.name = v;
+    else if (step === 1) data.current.age = v;
+    else if (step === 2) data.current.interests = v;
+    askDify(v);
   };
 
-  const chooseTheme = (theme: { emoji: string; label: string }) => {
+  const chooseTheme = async (theme: { emoji: string; label: string }) => {
     if (mode !== "theme" || typing) return;
     pushUser(`${theme.emoji} ${theme.label}`);
     data.current.themeEmoji = theme.emoji;
     setMode("locked");
-    // 資料Week5の仕様どおり、収集値をSessionStorageへ（generate-storyに渡す）
-    saveExtractedParams({
-      child_name: data.current.name,
-      age: normalizeAge(data.current.age),
-      interests: data.current.interests,
-      theme: theme.label,
-      language: "ja",
-    });
-    aiSay(
-      `ありがとうございます！${data.current.name}ちゃんの${theme.label}の絵本を作りますね。右の画面で様子が見られます📖`,
-      startGeneration,
-    );
+    setTyping(true);
+    try {
+      const res = await difyChat({ message: `${theme.emoji} ${theme.label}`, conversation_id: convId.current });
+      convId.current = res.conversation_id;
+      setTyping(false);
+      pushAi(res.answer);
+      if (res.is_complete && res.extracted_params) onChatComplete(res.extracted_params);
+    } catch (e) {
+      console.error(e);
+      setTyping(false);
+      enterError();
+    }
+  };
+
+  const onChatComplete = (params: ExtractedParams) => {
+    saveExtractedParams(params); // 資料Week5の仕様どおりSessionStorageへ
+    startGeneration(params);
   };
 
   // ---- generation (right pane) ----
-  const startGeneration = () => {
+  const startGeneration = (params: ExtractedParams) => {
     setPhase("generating");
     setTab("book");
     const ac = new AbortController();
     abortRef.current = ac;
     // WEEK5: generateStoryの中身をEdge Function呼び出しに差し替えるだけ（api.ts参照）
-    generateStory(
-      {
-        child_name: data.current.name,
-        age: normalizeAge(data.current.age),
-        interests: data.current.interests,
-        theme: THEMES.find((t) => t.emoji === data.current.themeEmoji)?.label ?? "",
-        language: "ja",
-      },
-      setProgress,
-      ac.signal,
-    )
+    generateStory(params, setProgress, ac.signal)
       .then((b) => {
+        if (!b.success) { enterError(); return; } // 失敗レスポンス（資料Week5仕様）
         setBook(b);
         setTitleDraft(b.title);
         setPage(0);
@@ -164,7 +180,31 @@ function CreatePage() {
       .catch((e: unknown) => {
         if ((e as DOMException)?.name === "AbortError") return;
         console.error(e);
+        enterError(); // 通信エラーも同じ導線へ
       });
+  };
+
+  // ---- 生成失敗時（資料Week5：「もう一度作る」でオンボードへ戻る） ----
+  const enterError = () => {
+    setPhase("error");
+    setTab("book");
+    setMode("locked");
+    aiSay("ごめんなさい、絵本の生成に失敗しました…。右の「もう一度作る」からやり直せます。");
+  };
+
+  const resetAll = () => {
+    abortRef.current?.abort();
+    convId.current = null;
+    data.current = { name: "", age: "", interests: "", themeEmoji: "" };
+    setMessages([]);
+    setStep(0);
+    setMode("text");
+    setPhase("chat");
+    setTab("chat");
+    setBook(null);
+    setPage(0);
+    setProgress({ percent: 0, stage: "imagining" });
+    aiSay(WELCOME);
   };
 
   // ---- adjustments (mock; api.ts経由でWeek 5にDify接続) ----
@@ -399,6 +439,18 @@ function CreatePage() {
                   <p key={progress.stage} className="animate-in fade-in duration-500 text-lg font-semibold">{STAGE_TEXT[progress.stage]}</p>
                 </div>
                 <p className="text-xs text-[color:var(--muted-foreground)]">できあがると、ここに絵本があらわれます</p>
+              </div>
+            )}
+
+            {phase === "error" && (
+              // ⚠ 生成失敗：資料Week5の要件どおりの導線
+              <div className="relative h-full flex flex-col items-center justify-center text-center gap-4">
+                <div className="text-6xl">😢</div>
+                <p className="text-lg font-semibold">絵本の生成に失敗しました</p>
+                <p className="text-xs text-[color:var(--muted-foreground)] max-w-xs leading-relaxed">
+                  通信状況などにより、まれに失敗することがあります。<br />お手数ですがもう一度お試しください。
+                </p>
+                <button onClick={resetAll} className="btn-primary !px-8 !py-3.5">もう一度作る</button>
               </div>
             )}
 

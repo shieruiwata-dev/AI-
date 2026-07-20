@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamStories – Dify出力JSONプレビュー</title>
+<style>
+  :root {
+    --cream:#FFF8F0; --coral:#FF9AA2; --coral-deep:#F27C86; --sky:#A8D8EA;
+    --butter:#FFE5A0; --ink:#333; --muted:#7A6E63; --border:#F3E4D6;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+         background:var(--cream); color:var(--ink); padding:24px 16px 64px; }
+  .wrap { max-width:1100px; margin:0 auto; }
+  h1 { font-size:20px; display:flex; align-items:center; gap:8px; }
+  h1 .badge { font-size:11px; background:var(--coral); color:#fff; border-radius:999px; padding:3px 10px; }
+  p.sub { color:var(--muted); font-size:13px; margin-top:4px; }
+  textarea { width:100%; height:160px; margin-top:14px; padding:12px 14px; font-size:12px;
+             font-family:ui-monospace,Consolas,monospace; border:1.5px solid var(--border);
+             border-radius:14px; background:#fff; resize:vertical; }
+  textarea:focus { outline:none; border-color:var(--coral); }
+  .row { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; align-items:center; }
+  button { font-family:inherit; font-weight:700; font-size:14px; border:none; cursor:pointer;
+           border-radius:12px; padding:12px 22px; }
+  .primary { background:var(--coral); color:#fff; box-shadow:0 6px 14px rgba(242,124,134,.35); }
+  .primary:hover { background:var(--coral-deep); }
+  .ghost { background:#fff; color:var(--muted); border:1px solid var(--border); }
+  #status { font-size:13px; color:var(--muted); }
+  #status.err { color:#C0392B; font-weight:700; }
+  .meta { margin-top:22px; padding:14px 18px; background:#fff; border:1px solid var(--border);
+          border-radius:14px; display:none; }
+  .meta h2 { font-size:18px; }
+  .meta .info { font-size:12.5px; color:var(--muted); margin-top:4px; }
+  .qc { display:inline-block; margin-top:6px; font-size:11.5px; border-radius:8px; padding:3px 10px; font-weight:700; }
+  .qc.ok { background:#E8F6EC; color:#1E7B3A; } .qc.ng { background:#FDEBEA; color:#C0392B; }
+  .grid { margin-top:16px; display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+  .page { background:#fff; border:1px solid var(--border); border-radius:16px; overflow:hidden;
+          box-shadow:0 10px 30px -18px rgba(51,51,51,.25); }
+  .page .imgbox { position:relative; aspect-ratio:3/2; background:
+        repeating-linear-gradient(45deg,#f5ede2,#f5ede2 10px,#f0e6d8 10px,#f0e6d8 20px);
+        display:flex; align-items:center; justify-content:center; }
+  .page img { width:100%; height:100%; object-fit:cover; display:block; }
+  .page .imgerr { position:absolute; inset:0; display:none; flex-direction:column; gap:6px;
+        align-items:center; justify-content:center; text-align:center; font-size:12px;
+        color:#C0392B; background:#FDF3F2; padding:12px; }
+  .page .body { padding:14px 16px; }
+  .page .num { font-size:11px; color:var(--muted); }
+  .page .txt { font-size:14px; line-height:1.9; margin-top:4px; }
+  .page .desc { font-size:11px; color:var(--muted); margin-top:8px; border-top:1px dashed var(--border); padding-top:8px; }
+  .hint { margin-top:14px; font-size:12px; color:var(--muted); background:#fff; border:1px dashed var(--border);
+          border-radius:12px; padding:10px 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📖 Dify出力JSONプレビュー <span class="badge">DreamStories開発ツール</span></h1>
+  <p class="sub">Difyワークフローの実行結果（JSON）を下に貼り付けて「プレビュー」を押すと、絵本として表示されます。画像の質チェック用。</p>
+
+  <textarea id="src" placeholder='ここにJSONを貼り付け（例：{"title":"たろうの宇宙大冒険","pages":[{"page_number":1,"text":"むかしむかし…","image_url":"https://..."}]}）&#10;DifyのAPIレスポンス全体（data.outputsで包まれた形）を丸ごと貼ってもOKです。'></textarea>
+  <div class="row">
+    <button class="primary" onclick="render()">🔍 プレビュー</button>
+    <button class="ghost" onclick="loadSample()">サンプルJSONを試す</button>
+    <span id="status"></span>
+  </div>
+
+  <div class="meta" id="meta">
+    <h2 id="title"></h2>
+    <div class="info" id="info"></div>
+    <div id="qc"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <div class="hint">
+    💡 画像が「読み込めませんでした」になる場合：DifyのファイルURLは<b>有効期限つき</b>です。実行し直して新しいJSONを貼ってください。
+    image_url がURLではなく base64 文字列でも、このツールは自動で画像に変換して表示します。
+  </div>
+</div>
+
+<script>
+// pages配列をどんな包み方のJSONからでも探し出す（Dify APIの data.outputs 包装や、
+// 出力が「JSON文字列」になっているケースにも対応）
+function findBook(root) {
+  const seen = new Set();
+  function walk(o, parentTitle) {
+    if (o == null) return null;
+    if (typeof o === "string") {
+      const t = o.trim();
+      if (t.startsWith("{") || t.startsWith("[")) {
+        try { return walk(JSON.parse(t), parentTitle); } catch (e) { return null; }
+      }
+      return null;
+    }
+    if (typeof o !== "object" || seen.has(o)) return null;
+    seen.add(o);
+    if (Array.isArray(o)) {
+      const looksLikePages = o.length > 0 && o.every(p => p && typeof p === "object" &&
+        ("image_url" in p || "image" in p || ("text" in p)));
+      if (looksLikePages && o.some(p => "image_url" in p || "image" in p || "page_number" in p)) {
+        return { title: parentTitle, pages: o };
+      }
+      for (const v of o) { const r = walk(v, parentTitle); if (r) return r; }
+      return null;
+    }
+    if (Array.isArray(o.pages)) return { title: o.title || parentTitle, pages: o.pages, raw: o };
+    for (const k of Object.keys(o)) {
+      const r = walk(o[k], o.title || parentTitle);
+      if (r) { if (!r.raw && o.quality_check) r.raw = o; return r; }
+    }
+    return null;
+  }
+  return walk(root, undefined);
+}
+
+// base64っぽい文字列を data URI に変換
+function toSrc(u) {
+  if (!u) return null;
+  u = String(u).trim();
+  if (/^(https?:|data:|blob:|\/)/.test(u)) return u;
+  if (/^[A-Za-z0-9+/=\s]+$/.test(u) && u.length > 200) {
+    const mime = u.startsWith("/9j/") ? "image/jpeg" : u.startsWith("iVBOR") ? "image/png" : "image/jpeg";
+    return "data:" + mime + ";base64," + u.replace(/\s+/g, "");
+  }
+  return u;
+}
+
+function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function render() {
+  const status = document.getElementById("status");
+  const grid = document.getElementById("grid");
+  const meta = document.getElementById("meta");
+  grid.innerHTML = ""; meta.style.display = "none";
+  status.className = ""; status.textContent = "";
+
+  let data;
+  try { data = JSON.parse(document.getElementById("src").value); }
+  catch (e) { status.className = "err"; status.textContent = "❌ JSONとして読めません：" + e.message; return; }
+
+  const book = findBook(data);
+  if (!book || !book.pages?.length) {
+    status.className = "err";
+    status.textContent = "❌ pages配列が見つかりません。合意フォーマット（title / pages[].page_number / text / image_url）か確認してください。";
+    return;
+  }
+
+  document.getElementById("title").textContent = book.title || "（タイトルなし）";
+  const withImg = book.pages.filter(p => p.image_url || p.image).length;
+  document.getElementById("info").textContent =
+    `全${book.pages.length}ページ ／ 画像あり ${withImg}ページ` +
+    (book.pages.length !== 12 ? "　⚠️ 合意仕様は12ページです" : "") +
+    (withImg < book.pages.length ? "　⚠️ 画像のないページがあります" : "");
+  const qcEl = document.getElementById("qc"); qcEl.innerHTML = "";
+  const qc = book.raw?.quality_check;
+  if (qc) qcEl.innerHTML = `<span class="qc ${qc.passed ? "ok" : "ng"}">品質チェック: ${qc.passed ? "合格" : "不合格"}${qc.notes ? " — " + esc(qc.notes) : ""}</span>`;
+  meta.style.display = "block";
+
+  book.pages.forEach((p, i) => {
+    const n = p.page_number ?? (i + 1);
+    const src = toSrc(p.image_url || p.image);
+    const div = document.createElement("div");
+    div.className = "page";
+    div.innerHTML =
+      `<div class="imgbox">` +
+        (src ? `<img src="${esc(src)}" alt="ページ${n}" loading="lazy"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : "") +
+        `<div class="imgerr" ${src ? "" : 'style="display:flex"'}>🖼️ 画像を読み込めませんでした<br><small>URLの期限切れ、またはimage_urlが空です</small></div>` +
+      `</div>` +
+      `<div class="body">` +
+        `<div class="num">— ${esc(n)} —</div>` +
+        `<div class="txt">${esc(p.text || "（本文なし）")}</div>` +
+        (p.illustration_description ? `<div class="desc">🎨 ${esc(p.illustration_description)}</div>` : "") +
+      `</div>`;
+    grid.appendChild(div);
+  });
+  status.textContent = "✅ 表示しました";
+}
+
+function loadSample() {
+  const svg = n => "data:image/svg+xml," + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><rect width="600" height="400" fill="#FFE5A0"/><text x="300" y="215" font-size="42" fill="#333" text-anchor="middle" font-family="sans-serif">Page ${n}</text></svg>`);
+  const sample = { title: "たろうの宇宙大冒険（サンプル）", language: "ja",
+    pages: [1,2,3].map(n => ({ page_number:n, text:`サンプルページ${n}のほんぶんです。`, image_url: svg(n), illustration_description:`ページ${n}の挿絵の説明` })),
+    quality_check: { passed: true, notes: "サンプルデータ" } };
+  document.getElementById("src").value = JSON.stringify(sample, null, 2);
+  render();
+}
+</script>
+</body>
+</html>

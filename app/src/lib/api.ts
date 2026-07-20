@@ -57,7 +57,7 @@ export type GenerateProgress = {
 export type LibraryBook = {
   id: string;
   title: string;
-  status: "generating" | "completed" | "paid"; // booksテーブルのstatusと同じ
+  status: "generating" | "completed" | "paid" | "failed"; // booksテーブルのstatusと同じ（DB仕様書準拠）
   created_at: string;
   cover_emoji: string;
   cover_tone: string;
@@ -67,6 +67,15 @@ export type LibraryBook = {
 
 const PARAMS_KEY = "ds:extracted_params";
 const BOOK_KEY = (id: string) => `ds:book:${id}`;
+
+// 年齢入力の正規化：全角数字や「5歳」「５さい」等から整数を取り出す。
+// booksテーブルの age は int NOT NULL のため、数値化できるものは必ず数値にする。
+export function normalizeAge(v: number | string): number | string {
+  if (typeof v === "number") return v;
+  const half = v.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
+  const m = half.match(/\d+/);
+  return m ? Number(m[0]) : v;
+}
 
 export function saveExtractedParams(p: ExtractedParams) {
   try { sessionStorage.setItem(PARAMS_KEY, JSON.stringify(p)); } catch { /* private mode等 */ }
@@ -196,6 +205,7 @@ export async function listBooks(): Promise<LibraryBook[]> {
     { id: "demo", title: "ゆうきくんの森の冒険", status: "paid", created_at: "2025-07-15", cover_emoji: "🌳", cover_tone: "from-[color:var(--sky)] to-[color:var(--butter)]" },
     { id: "b2", title: "さくらちゃんとお星さま", status: "paid", created_at: "2025-06-30", cover_emoji: "⭐", cover_tone: "from-[color:var(--butter)] to-[#FFB3A7]" },
     { id: "b3", title: "ひろとの海の大冒険", status: "completed", created_at: "-", cover_emoji: "🌊", cover_tone: "from-[color:var(--sky)] to-[#7FBEDB]" },
+    { id: "b4", title: "こうたの そらの たび", status: "failed", created_at: "-", cover_emoji: "🎈", cover_tone: "from-[color:var(--butter)] to-[color:var(--sky)]" },
   ];
 }
 

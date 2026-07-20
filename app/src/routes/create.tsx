@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { BookCover } from "@/components/BookCover";
 import { FlipBook } from "@/components/FlipBook";
 import {
+  normalizeAge,
   saveExtractedParams,
   generateStory,
   regeneratePage,
@@ -120,7 +121,7 @@ function CreatePage() {
     // 資料Week5の仕様どおり、収集値をSessionStorageへ（generate-storyに渡す）
     saveExtractedParams({
       child_name: data.current.name,
-      age: Number.parseInt(data.current.age, 10) || data.current.age,
+      age: normalizeAge(data.current.age),
       interests: data.current.interests,
       theme: theme.label,
       language: "ja",
@@ -141,7 +142,7 @@ function CreatePage() {
     generateStory(
       {
         child_name: data.current.name,
-        age: Number.parseInt(data.current.age, 10) || data.current.age,
+        age: normalizeAge(data.current.age),
         interests: data.current.interests,
         theme: THEMES.find((t) => t.emoji === data.current.themeEmoji)?.label ?? "",
         language: "ja",

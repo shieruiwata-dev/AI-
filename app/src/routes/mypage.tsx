@@ -33,6 +33,7 @@ function MyPage() {
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {books.map((b) => {
             const purchased = b.status === "paid";
+            const failed = b.status === "failed";
             return (
               <div
                 key={b.id}
@@ -47,17 +48,21 @@ function MyPage() {
                     className="shadow-[0_10px_24px_-12px_rgba(120,90,70,0.45)] transition-shadow duration-300 group-hover:shadow-[0_20px_36px_-14px_rgba(120,90,70,0.55)]"
                   >
                     {!purchased && (
-                      <span className="absolute top-3 right-3 rounded-full bg-[color:var(--coral)] text-white text-[11px] font-bold px-2.5 py-1 shadow">未購入</span>
+                      <span className={`absolute top-3 right-3 rounded-full text-white text-[11px] font-bold px-2.5 py-1 shadow ${failed ? "bg-[color:var(--muted-foreground)]" : "bg-[color:var(--coral)]"}`}>
+                        {failed ? "生成失敗" : "未購入"}
+                      </span>
                     )}
                   </BookCover>
                 </div>
                 <h3 className="mt-4 text-base">{b.title}</h3>
                 <p className="text-xs text-[color:var(--muted-foreground)]">
-                  {purchased ? `購入日: ${b.created_at}` : "まだ購入されていません"}
+                  {purchased ? `購入日: ${b.created_at}` : failed ? "生成に失敗しました" : "まだ購入されていません"}
                 </p>
                 <div className="mt-4">
                   {purchased ? (
                     <Link to="/preview/$id" params={{ id: b.id }} className="btn-secondary w-full text-sm">開く</Link>
+                  ) : failed ? (
+                    <Link to="/create" className="btn-secondary w-full text-sm">もう一度作る</Link>
                   ) : (
                     <Link to="/checkout/$id" params={{ id: b.id }} className="btn-primary w-full text-sm">購入する</Link>
                   )}
